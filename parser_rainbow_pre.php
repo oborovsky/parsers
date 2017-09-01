@@ -3,7 +3,7 @@ define("ROOT","./");
 
 $host = "localhost";
 $user = "root";
-$password = "4995";
+$password = "k0les0";
 $db = "test";
 
 $lnk = mysql_connect($host, $user, $password) or die ("error in connect: ".mysql_error());
@@ -81,6 +81,19 @@ function make_products($products)
         }
         $out_array[]="('".$KEY_RAINBOW."','".mysql_real_escape_string($art)."','".$category."','".mysql_real_escape_string($offer->asXML())."')";
     }
+}
+//переделываем немного картинки, чтобы было как в XINDAO
+
+foreach ($products->offer as $offer) 
+{
+	$images = (string)$offer->images;
+	$arr_images = explode(';', $images);
+	$new_images = "";
+	foreach ($arr_images as $image)
+	{
+		$new_images = $new_images."<image>".$image."</image>";
+	}
+	$offer->images = $new_images;
 }
 
 make_cat($tree);

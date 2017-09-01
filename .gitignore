@@ -1,0 +1,4 @@
+log/*.log
+in/*.xml
+in/*.log
+sql/out/*

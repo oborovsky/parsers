@@ -1,0 +1,37 @@
+# Edit this file to introduce tasks to be run by cron.
+# 
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+# 
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').# 
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+# 
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+# 
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
+0 1 * * * bash /var/www/rc/loadouts_std.sh >> /var/log/d3c_loadouts_supl.log
+0 */1 * * * bash /var/www/rc/loadouts_cuty.sh >> /var/log/d3c_loadouts_cuty.log
+*/1 * * * * bash /var/www/rc/images_download.sh >> /var/log/d3c_images.log; sleep 10; bash /var/www/rc/images_download.sh >> /var/log/d3c_images.log
+*/3 * * * * bash /var/www/rc/images_cure.sh >> /var/log/d3c_cure_images.log
+*/1 * * * * bash /var/www/rc/runparser.sh >> /var/log/d3c_parser.log; sleep 10; bash /var/www/rc/runparser.sh >>/var/log/d3c_parser.log; sleep 10; bash /var/www/rc/runparser.sh >> /var/log/d3c_parser.log
+0 0 * * * bash /var/www/rc/downloads.sh >> /var/log/d3c_downloads.log
+*/20 */1 * * * bash /var/www/rc/subscribeupd_new.sh >> /var/log/d3c_subscribes.log
+10,30,50 */1 * * * bash /var/www/rc/transfer.sh >> /var/log/d3c_transfer.log
+*/1 * * * * bash /var/www/rc/updateimages.sh >> /var/log/d3c_updimages.log
+*/10 * * * * bash /var/www/rc/imagefiles.sh >> /var/log/d3c_imagefiles.log
+###*/1 * * * * bash /var/www/rc/images_get.sh > /var/log/d3c_image_backup
+#*/1 * * * * bash /var/www/rc/accept_updates.sh blank >> /var/log/d3c_accept_updates.log
+###*/1 * * * * curl http://max.cuty.ru/system/test.php >> /var/log/1rebuild_binds.log
+
+

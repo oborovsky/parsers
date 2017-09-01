@@ -3,6 +3,8 @@
 // $t0="common.php"; while(!defined("ROOT")) {include($t0); $t0="..".DIRECTORY_SEPARATOR.$t0;}; unset($t0);//$DEBUG=100;
 $time=$_SERVER['REQUEST_TIME']+15;
 $comma_a=array(","," "); $comma_b=array(".","");
+define("COINS",100);
+define("GRAMS",1000);
 
 /*================================================================
  *-----------------------IMAGE_SERVER CONNECTION-----------------*
@@ -18,10 +20,21 @@ mysql_query("SET NAMES utf8",$out_connect);
 /*================================================================
  *-----------------------IMAGE_SERVER CONNECTION-----------------*
  ================================================================*/
+$LOCAL_SERVER="localhost";
+$LOCAL_USER="root";
+$LOCAL_PASS="k0les0";
+$LOCAL_DB="test";
+
+$std_connect=mysql_connect($LOCAL_SERVER,$LOCAL_USER,$LOCAL_PASS);
+mysql_select_db($LOCAL_DB,$std_connect);
+mysql_query("SET NAMES utf8",$std_connect);
+echo "connected to local base\n";
+//==========================================
 
 function updateURL($url,$art,$link)
 {
     $lnk=mysql_real_escape_string($url,$link);
+    // echo "INSERT IGNORE INTO `img_urls` (`url`,`hash`) VALUES ('".$lnk."','')\n";
     mysql_query("INSERT IGNORE INTO `img_urls` (`url`,`hash`) VALUES ('".$lnk."','')",$link);  
     $qq=mysql_query("SELECT `id` FROM `img_urls` WHERE `url`='".$lnk."'",$link);
     if ($qq && mysql_num_rows($qq)>0)
@@ -64,20 +77,32 @@ function apply_rules($data,$rules) {
 }
 
 $parsers=array(); $cats=array();
-if(($handle=fopen(ROOT."system".DIRECTORY_SEPARATOR."parsers".DIRECTORY_SEPARATOR."state2".DIRECTORY_SEPARATOR."configure.rgx","r"))!==FALSE) {
+if(($handle=fopen("configure.rgx","r"))!==FALSE) {
     while($data=fgetcsv($handle,1000,","))
     if(count($data)===6) {
         $parsers[$data[0]][]=array($data[1],$data[2],$data[3],$data[4],$data[5]);
         $cats[]=$data[0];
     };
     fclose($handle); 
+
+    echo "read done from cofigure.rgx\n";
+
     if ($q=mysql_query("SELECT `id`,`mfg`,`art`,`cat`,`xml` FROM `tmp_goods` WHERE `mfg` in ('".implode("','",array_unique($cats))."') ORDER BY `mfg` LIMIT 200",$std_connect)) {
     //if ($q=mysql_query("SELECT `id`,`mfg`,`art`,`cat`,`xml` FROM `tmp_goods` WHERE `mfg` in ('J') AND xml LIKE '%images%produc%' ORDER BY `mfg` LIMIT 10")) {
     //if ($q=mysql_query("SELECT `id`,`mfg`,`art`,`cat`,`xml` FROM `tmp_goods` WHERE art='cuty3080'",$std_connect)) {
+        
+        echo "start parse tmp_goods\n";
+
         $i=0;
         while(($t=mysql_fetch_row($q))&&(time()<$time)) {
             $t[2]=mysql_real_escape_string($t[2],$std_connect); $t[3]=mysql_real_escape_string($t[3],$std_connect);
+
+            // print_r($t);
+            // print_r($parsers[$t[1]]);
+
             $info=apply_rules($t[4],$parsers[$t[1]]);
+
+            // print_r($info);
             //echo "<pre>".COINS."<br>";
             //print_r($info);
             
@@ -101,16 +126,18 @@ if(($handle=fopen(ROOT."system".DIRECTORY_SEPARATOR."parsers".DIRECTORY_SEPARATO
             $new_art=str_replace(",","[comma]",$t[2]);
             $tmp_0=mysql_query("SELECT `id` FROM `goods_prices` WHERE `art`='".$new_art."' AND `mfg`='".$t[1]."' LIMIT 1",$std_connect);
             if(count($tq)>0)
-                if(mysql_num_rows($tmp_0)) {
+                if(mysql_num_rows($tmp_0))
+                {
                     list($art_id)=mysql_fetch_row($tmp_0);
                     //echo "U :: art_id is ".$art_id."<br>";
                     // тут будет логирование в старую базу старых записей.
-                    //echo "UPDATE `goods_prices` SET ".implode(",",$tq)." WHERE `id`=".$art_id."<br>";
+                    // echo "UPDATE `goods_prices` SET ".implode(",",$tq)." WHERE `id`=".$art_id."\n";
                     mysql_query("UPDATE `goods_prices` SET ".implode(",",$tq)." WHERE `id`=".$art_id,$std_connect);
                 }
-                else {
+                else 
+                {
                     //continue;
-                    //echo "INSERT INTO `goods_prices` SET `art`='".$new_art."',`mfg`='".$t[1]."',".implode(",",$tq)."<br>";
+                    // echo "INSERT INTO `goods_prices` SET `art`='".$new_art."',`mfg`='".$t[1]."',".implode(",",$tq)."\n";
                     mysql_query("INSERT INTO `goods_prices` SET `art`='".$new_art."',`mfg`='".$t[1]."',".implode(",",$tq),$std_connect);
                     //echo mysql_error();
                     $art_id=mysql_insert_id($std_connect);
@@ -133,7 +160,7 @@ if(($handle=fopen(ROOT."system".DIRECTORY_SEPARATOR."parsers".DIRECTORY_SEPARATO
                         $upds.=updateURL($val,$art_id,$std_connect);//$out_connect);// Здесь меняем на внутренний коннект
                     }
                 }
-                
+                // echo "INSERT IGNORE INTO `images` (`art_id`,`url_id`) VALUES ".$upds."\n";
                 mysql_query("INSERT IGNORE INTO `images` (`art_id`,`url_id`) VALUES ".$upds,$std_connect);
             }
             
@@ -161,9 +188,12 @@ if(($handle=fopen(ROOT."system".DIRECTORY_SEPARATOR."parsers".DIRECTORY_SEPARATO
             //echo "HASH: ".$u1a."-:-".$u1b." <br><br>";
             
             if(count($uu)>0) {
+            	// echo "INSERT INTO `goods_props` SET `art_id`=".$art_id.",`mfg`='".$t[1]."'".$tmp_0."\n";
                 mysql_query("INSERT INTO `goods_props` SET `art_id`=".$art_id.",`mfg`='".$t[1]."'".$tmp_0,$std_connect);
-                echo "<br>== ".mysql_error()." ==<br>";
+                // echo "<br>== ".mysql_error()." ==<br>\n";
+                // echo "INSERT INTO `hashes`(`part1`,`part2`) VALUES ".implode(",",$uu)."\n";
                 mysql_query("INSERT INTO `hashes`(`part1`,`part2`) VALUES ".implode(",",$uu),$std_connect);
+                // echo "INSERT INTO `goods_props_current` SET `art_id`=".$art_id.",`mfg`='".$t[1]."',`descr`='".$info["descr"]."',`images`='".$info["images"]."',`params`='".$info["params"]."',`cats`='".$t[3]."' ON DUPLICATE KEY UPDATE `mfg`='".$t[1]."',`descr`='".$info["descr"]."',`images`='".$info["images"]."',`params`='".$info["params"]."',`cats`='".$t[3]."'\n";
                 mysql_query("INSERT INTO `goods_props_current` SET `art_id`=".$art_id.",`mfg`='".$t[1]."',`descr`='".$info["descr"]."',`images`='".$info["images"]."',`params`='".$info["params"]."',`cats`='".$t[3]."' ON DUPLICATE KEY UPDATE `mfg`='".$t[1]."',`descr`='".$info["descr"]."',`images`='".$info["images"]."',`params`='".$info["params"]."',`cats`='".$t[3]."'",$std_connect);
             }
         if (!mysql_query("DELETE FROM `tmp_goods` WHERE `id`=".$t[0],$std_connect)) echo mysql_error($std_connect);

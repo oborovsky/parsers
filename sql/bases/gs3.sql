@@ -26,14 +26,14 @@ SET time_zone = "+00:00";
 -- Структура таблицы `adm_components`
 --
 
-CREATE TABLE IF NOT EXISTS `adm_components` (
-  `id` int(11) NOT NULL,
-  `title` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
-  `addr` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
-  `name` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
-  `actions` varchar(500) COLLATE utf8_unicode_ci NOT NULL,
-  `params` text COLLATE utf8_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+-- CREATE TABLE IF NOT EXISTS `adm_components` (
+--   `id` int(11) NOT NULL,
+--   `title` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+--   `addr` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+--   `name` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+--   `actions` varchar(500) COLLATE utf8_unicode_ci NOT NULL,
+--   `params` text COLLATE utf8_unicode_ci NOT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -41,12 +41,12 @@ CREATE TABLE IF NOT EXISTS `adm_components` (
 -- Структура таблицы `cron_scripts_state`
 --
 
-CREATE TABLE IF NOT EXISTS `cron_scripts_state` (
-  `script_name` varchar(100) COLLATE utf8_bin NOT NULL,
-  `description` text COLLATE utf8_bin NOT NULL,
-  `flag` tinyint(4) NOT NULL DEFAULT '1',
-  `lastchange` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- CREATE TABLE IF NOT EXISTS `cron_scripts_state` (
+--   `script_name` varchar(100) COLLATE utf8_bin NOT NULL,
+--   `description` text COLLATE utf8_bin NOT NULL,
+--   `flag` tinyint(4) NOT NULL DEFAULT '1',
+--   `lastchange` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- --------------------------------------------------------
 
@@ -54,11 +54,11 @@ CREATE TABLE IF NOT EXISTS `cron_scripts_state` (
 -- Структура таблицы `ftpgroup`
 --
 
-CREATE TABLE IF NOT EXISTS `ftpgroup` (
-  `groupname` varchar(16) NOT NULL DEFAULT '',
-  `gid` smallint(6) NOT NULL DEFAULT '2001',
-  `members` varchar(16) NOT NULL DEFAULT ''
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='ProFTP group table';
+-- CREATE TABLE IF NOT EXISTS `ftpgroup` (
+--   `groupname` varchar(16) NOT NULL DEFAULT '',
+--   `gid` smallint(6) NOT NULL DEFAULT '2001',
+--   `members` varchar(16) NOT NULL DEFAULT ''
+-- ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='ProFTP group table';
 
 -- --------------------------------------------------------
 
@@ -66,20 +66,20 @@ CREATE TABLE IF NOT EXISTS `ftpgroup` (
 -- Структура таблицы `ftpuser`
 --
 
-CREATE TABLE IF NOT EXISTS `ftpuser` (
-  `id` int(10) unsigned NOT NULL,
-  `userid` varchar(32) CHARACTER SET latin1 NOT NULL DEFAULT '',
-  `passwd` varchar(32) CHARACTER SET latin1 NOT NULL DEFAULT '',
-  `uid` smallint(6) NOT NULL DEFAULT '2001',
-  `gid` smallint(6) NOT NULL DEFAULT '2001',
-  `homedir` varchar(255) CHARACTER SET latin1 NOT NULL DEFAULT '',
-  `shell` varchar(16) CHARACTER SET latin1 NOT NULL DEFAULT '/sbin/nologin',
-  `count` int(11) NOT NULL DEFAULT '0',
-  `accessed` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `modified` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `email` varchar(127) CHARACTER SET latin1 NOT NULL,
-  `loaded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='ProFTP user table';
+-- CREATE TABLE IF NOT EXISTS `ftpuser` (
+--   `id` int(10) unsigned NOT NULL,
+--   `userid` varchar(32) CHARACTER SET latin1 NOT NULL DEFAULT '',
+--   `passwd` varchar(32) CHARACTER SET latin1 NOT NULL DEFAULT '',
+--   `uid` smallint(6) NOT NULL DEFAULT '2001',
+--   `gid` smallint(6) NOT NULL DEFAULT '2001',
+--   `homedir` varchar(255) CHARACTER SET latin1 NOT NULL DEFAULT '',
+--   `shell` varchar(16) CHARACTER SET latin1 NOT NULL DEFAULT '/sbin/nologin',
+--   `count` int(11) NOT NULL DEFAULT '0',
+--   `accessed` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+--   `modified` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+--   `email` varchar(127) CHARACTER SET latin1 NOT NULL,
+--   `loaded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='ProFTP user table';
 
 -- --------------------------------------------------------
 
@@ -92,6 +92,8 @@ CREATE TABLE IF NOT EXISTS `goods_prices` (
   `mfg` char(1) COLLATE utf8_bin NOT NULL COMMENT 'выгрузчик',
   `art` tinytext COLLATE utf8_bin NOT NULL COMMENT 'артикул',
   `images` varchar(4000) COLLATE utf8_bin DEFAULT NULL COMMENT 'список картинок поставщика (hashes ONLY)',
+  `price_rainbow` int(11) NOT NULL DEFAULT '0',
+  `price_rainbow_` timestamp NULL DEFAULT NULL,
   `price_xindao` int(11) NOT NULL DEFAULT '0',
   `price_xindao_` timestamp NULL DEFAULT NULL,
   `price_eje_initial` int(11) NOT NULL DEFAULT '0',
@@ -122,6 +124,8 @@ CREATE TABLE IF NOT EXISTS `goods_prices` (
   `price_eklektika_main_` timestamp NULL DEFAULT NULL,
   `price_eklektika_adv` int(11) NOT NULL DEFAULT '0',
   `price_eklektika_adv_` timestamp NULL DEFAULT NULL,
+  `stock_rainbow` int(11) NOT NULL DEFAULT '0',
+  `stock_rainbow_` timestamp NULL DEFAULT NULL,
   `stock_xindao_eur` int(11) NOT NULL DEFAULT '0',
   `stock_xindao_eur_` timestamp NULL DEFAULT NULL,
   `stock_xindao_moscow` int(11) NOT NULL DEFAULT '0',
@@ -262,7 +266,7 @@ CREATE TABLE IF NOT EXISTS `images` (
   `art_id` int(11) NOT NULL COMMENT 'id товара',
   `url_id` int(11) NOT NULL COMMENT 'id ссылки на картинку',
   `state` int(11) NOT NULL DEFAULT '1' COMMENT 'состояние картинки(>0 - в обработке)',
-  `upd` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'последнее обновление'
+  `upd` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'последнее обновление'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='таблица состояния картинок';
 
 -- --------------------------------------------------------
@@ -322,26 +326,26 @@ CREATE TABLE IF NOT EXISTS `tmp_goods` (
 --
 -- Индексы таблицы `adm_components`
 --
-ALTER TABLE `adm_components`
-  ADD PRIMARY KEY (`id`);
+-- ALTER TABLE `adm_components`
+--   ADD PRIMARY KEY (`id`);
 
 --
 -- Индексы таблицы `cron_scripts_state`
 --
-ALTER TABLE `cron_scripts_state`
-  ADD PRIMARY KEY (`script_name`);
+-- ALTER TABLE `cron_scripts_state`
+--   ADD PRIMARY KEY (`script_name`);
 
 --
 -- Индексы таблицы `ftpgroup`
 --
-ALTER TABLE `ftpgroup`
-  ADD KEY `groupname` (`groupname`);
+-- ALTER TABLE `ftpgroup`
+--   ADD KEY `groupname` (`groupname`);
 
 --
 -- Индексы таблицы `ftpuser`
 --
-ALTER TABLE `ftpuser`
-  ADD PRIMARY KEY (`id`);
+-- ALTER TABLE `ftpuser`
+--   ADD PRIMARY KEY (`id`);
 
 --
 -- Индексы таблицы `goods_prices`
@@ -418,13 +422,13 @@ ALTER TABLE `tmp_goods`
 --
 -- AUTO_INCREMENT для таблицы `adm_components`
 --
-ALTER TABLE `adm_components`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
---
--- AUTO_INCREMENT для таблицы `ftpuser`
---
-ALTER TABLE `ftpuser`
-  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
+-- ALTER TABLE `adm_components`
+--   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+-- --
+-- -- AUTO_INCREMENT для таблицы `ftpuser`
+-- --
+-- ALTER TABLE `ftpuser`
+--   MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT для таблицы `goods_prices`
 --

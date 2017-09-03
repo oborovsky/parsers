@@ -3684,21 +3684,13 @@ ALTER TABLE `instr_tree_upd`
 -- Индексы таблицы `items_0`
 --
 ALTER TABLE `items_0`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `arts` (`arts`(10)),
-  ADD FULLTEXT KEY `descr` (`descr`);
-ALTER TABLE `items_0`
-  ADD FULLTEXT KEY `cats` (`cats`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Индексы таблицы `items_0_backup`
 --
 ALTER TABLE `items_0_backup`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `arts` (`arts`(10)),
-  ADD FULLTEXT KEY `descr` (`descr`);
-ALTER TABLE `items_0_backup`
-  ADD FULLTEXT KEY `cats` (`cats`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Индексы таблицы `items_0_log`

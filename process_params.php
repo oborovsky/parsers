@@ -1,4 +1,4 @@
-<?
+<?php
 // $MASTER_DB=1;
 // $t0="common.php"; while(!defined("ROOT")) {include($t0); $t0="..".DIRECTORY_SEPARATOR.$t0;}; unset($t0);//$DEBUG=100;
 $time=$_SERVER['REQUEST_TIME']+15;
@@ -22,7 +22,8 @@ mysql_query("SET NAMES utf8",$out_connect);
  ================================================================*/
 $LOCAL_SERVER="localhost";
 $LOCAL_USER="root";
-$LOCAL_PASS="k0les0";
+// $LOCAL_PASS="k0les0";
+$LOCAL_PASS = "4995";
 $LOCAL_DB="test";
 
 $std_connect=mysql_connect($LOCAL_SERVER,$LOCAL_USER,$LOCAL_PASS);

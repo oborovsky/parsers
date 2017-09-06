@@ -3,7 +3,8 @@ define("ROOT","./");
 
 $host = "localhost";
 $user = "root";
-$password = "k0les0";
+// $password = "k0les0";
+$password = "4995";
 $db = "test";
 
 $lnk = mysql_connect($host, $user, $password) or die ("error in connect: ".mysql_error());

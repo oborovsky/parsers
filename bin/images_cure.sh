@@ -8,7 +8,8 @@ start=`date +%s`
 CURL='/usr/bin/curl'
 
 user="root"
-password="k0les0"
+# password="k0les0"
+password="4995"
 database="test"
 dbargs="-s -N --user=${user} --password=${password} --database=${database}"
 #mysql -s -N --user="$user" --password="$password" --database="$database"

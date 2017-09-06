@@ -1,4 +1,11 @@
-схема:
+Привет, Миша !
+
+Это Дима Оборовский, я тут разбирался с вугрузками - возникли вопросы.
+
+часть 1
+==========
+Для начала, опишу как я понял схему работы выгрузок:
+
 1) загружаем xml поставщиков ( в 00:00 downloads.sh)
 
 2) предварительный разбор в таблицу tmp_goods ( в 01:00 loadouts_std.sh)
@@ -7,7 +14,7 @@
 который разбирает tmp_goods на good_prices, img_urls, images, goods_props, hashes, goods_props_current
 по кусочкам.
 
-4) запускаестся скрипт subscribeupd_new.sh, который загружаетс обновления в базу gs3_blank:
+4) запускаестся скрипт subscribeupd_new.sh, который загружает обновления в из gs3 в базу gs3_blank:
 gs3.goods_prices -> gs3_blank.goods_pricis_tmp -> gs3_blank.goods_prices_0;
 добавляте строки в goods_bindings_0, items_0 - если нужно;
 gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
@@ -32,8 +39,20 @@ gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
 (скрипт updateimages.sh)
 9) скрипт imagefiles.sh выгружает таблицу в файл imagefiles.sql и по ftp передаёт его на сервер
 в папку cat_new/in
+---------------------------------------------------------------------------------------------------
+все эти скрипты запускаются через cron в прописанное время.
+Внимание вопос :)
 
-при добавлении каталога я правил таблицы в базах:
+по части 1: верна ли схема и мжет есть ещё какие-нибудь тонкости ?
+
+часть 2
+===============
+Меня попросили написать обработчик выгрузки из каталога Радуги.
+Для этого я : 
+1) написал парсер первой стадии в папку parsers/stat1e/
+2) добавил реги в configure.rgx что в папке parsers/state2/
+3) плюс правил таблицы:
+
 gs3
 -----------------
 system_config - добавил записи var_KEY_RAINBOW=W, arr_PRICES_W=a:1:{s:13:"price_rainbow";s:22:"розничная цена rainbow";},
@@ -50,22 +69,17 @@ system_config - добавил записи var_PRICEMULT_W=price_rainbow:1.00, 
 				E,O,C,H,P,M,Q,J,X,R,K,S,W
 bitmasks_0   -  добивил запись INSERT INTO `bitmasks_0` (`id`, `parent`, `value`, `order`, `hvost`, `settings`, `uid`, `upd`) VALUES
 				(272, 21, 'Rainbow', 256, '263,265,264,121', 72625749491713, 2, NULL);
+________________________________________________________________________________________________________
 
-при разборе нового товара, на него заводится карточка, и id товара заносится в таблицу gs3_blank.bits_0
+Внимание вопос :)
+по части 2:     
+1) Подозреваю, что где-то в системе есть интерфейс по добавлению нового каталога (судя по сериализованным массивам в таблицах ), но что-то не могу его найти, - где он ?
+2) Обрисуй схему, как ты действовал, добавляя новый катлог .
+3) Расскажи: какие характерные ошибки ты помнишь и как их решал ( говорят оазис часто ломается)
+4) есть ли какие-нибудь инфы и где они лежат ?
 
-при обращеннии к catalogue.php получен ответ , для выборки Текстиля
 
-"SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' AND `cats` LIKE '%Текстиль%' AND `amount`>0  LIMIT 300,50"
+Дима.  
 
-"SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) LIMIT 0,50"
 
-без карточки :
-SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' LIMIT 0,50
 
-в наличии :
-SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' AND `amount`>0  LIMIT 0,50
-
-без карточки :
-SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) LIMIT 0,50
-
-SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' AND `amount`>0  LIMIT 0,50

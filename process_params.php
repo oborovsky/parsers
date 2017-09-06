@@ -202,4 +202,165 @@ if(($handle=fopen("configure.rgx","r"))!==FALSE) {
     echo "Rows affected: ".$i."\n";
     }
 }
+//from comp
+/*
+Array ( 
+[vars] => Array ( 
+    [TXT_NO_LEGAL] => без юр.лица 
+    [KEY_EBAZAAR] => E
+    [KEY_OASIS] => O 
+    [PRICES_E] => Array ( [price_ebazaar] => розничная цена ebazaar ) 
+    [STOCKS_E] => Array ( [stock_ebazaar1] => ebazaar (на складе) [stock_ebazaar2] => ebazaar (доступно) ) 
+    [STOCKS_O] => Array ( [stock_oasis_sklad] => оазис (на складе) [stock_oasis_rez] => оазис (резерв) ) 
+    [PRICES_O] => Array ( [price_oasis] => розничная цена oasis ) 
+    [PRICES_C] => Array ( [price_ocean] => розничная цена ocean ) 
+    [STOCKS_C] => Array ( [stock_ocean_total] => оазис (на складе всего) [stock_ocean_ns] => оазис (на складе Новосибирск) [stock_ocean_msk] => оазис (на складе Москва) [stock_ocean_rst] => оазис (на складе Ростов) ) 
+    [PRICES_H] => Array ( [price_happy] => розничная цена happy ) 
+    [STOCKS_H] => Array ( [stock_happy_sklad] => хэппи (на складе) [stock_happy_rez] => хэппи (резерв) ) 
+    [PRICES_P] => Array ( [price_project111] => розничная цена Проект 111 ) 
+    [STOCKS_P] => Array ( [stock_project111_total] => Проект 111 (на складе) [stock_project111_free] => Проект 111 (доступно) ) 
+    [PRICES_M] => Array ( [price_midocean] => розничная цена Mid Ocean Brands ) 
+    [STOCKS_M] => Array ( [stock_midocean] => Mid Ocean Brands (на складе) ) 
+    [PRICES_Q] => Array ( [price_cuty_sup] => цена поставщика для Кьюти [price_cuty_in] => входная цена для Кьюти [price_cuty_opt] => оптовая цена Кьюти [price_cuty_ret] => розничная цена Кьюти ) 
+    [STOCKS_Q] => Array ( [stock_cuty] => Кьюти (на складе) ) 
+    [KEY_OCEAN] => C 
+    [KEY_HAPPY] => H 
+    [KEY_PR111] => P 
+    [KEY_MID] => M 
+    [KEY_CUTY] => Q 
+    [KEY_EJE] => J 
+    [STOCKS_J] => Array ( [stock_eje_stock] => еже (в запасе) [stock_eje_warehouse] => еже (на складе) [stock_eje_delivery] => еже (в пути) ) 
+    [PRICES_J] => Array ( [price_eje_initial] => начальная цена [price_eje_final] => конечная цена ) 
+    [KEY_XIN] => X 
+    [STOCKS_X] => Array ( [stock_xindao_eur] => xindao (в Европе) [stock_xindao_moscow] => xindao (в Москве) [stock_xindao_moscow_avail] => xindao (в Москве доступно) ) 
+    [PRICES_X] => Array ( [price_xindao] => начальная цена ) 
+    [KEY_ROSTIME] => R 
+    [PRICES_R] => Array ( [price_midocean] => розничная цена Mid Ocean Brands ) 
+    [STOCKS_R] => Array ( [stock_midocean] => Mid Ocean Brands (на складе) ) 
+    [KEY_EKLEKTIKA] => K 
+    [STOCKS_K] => Array ( [stock_eklektika_sklad] => Эклектика (на складе) [stock_eklektika_rez] => Эклектика (резерв) ) 
+    [PRICES_K] => Array ( [price_eklektika_main] => основная цена [price_eklektika_adv] => рекламная цена ) 
+    [KEY_STAN] => S 
+    [PRICES_S] => Array ( [price_stan_main] => Цена в базе STAN ) 
+    [STOCKS_S] => Array ( [stock_stan_sklad] => STAN (на складе) [stock_stan_moscow] => STAN (Москва) [stock_stan_discount] => STAN (скидка) ) 
+    [KEY_RAINBOW] => W 
+    [MANUFACTURERS] => Array ( [E] => Ebazaar 
+                       [O] => OASIS 
+                       [C] => OCEAN 
+                       [H] => HAPPY gifts 
+                       [P] => Project 111 
+                       [M] => Mid Ocean Brands 
+                       [Q] => Локальный склад 
+                       [J] => ЕЖЕ 
+                       [X] => XINDAO 
+                       [R] => РосТайм 
+                       [K] => Эклектика 
+                       [S] => STAN 
+                       [W] => Rainbow ) 
+    [PRICES_W] => 
+    [STOCKS_W] => 
+    [MEASURES] => Array ( [1] => Array ( [name] => шт [delim] => 1 ) 
+                          [2] => Array ( [name] => л [delim] => 1000 ) 
+                          [3] => Array ( [name] => кг [delim] => 1000 ) 
+                          [4] => Array ( [name] => м [delim] => 1000 ) ) 
+    [ITEMFLAGS] => Array ( [1] => едет на сайт 
+                           [2] => собственное произв-во 
+                           [3] => всегда в наличии 
+                           [4] => не резервируется 
+                           [5] => цена у менеджера ) 
+    [CLI_JUR_HDR] => Array ( [0] => Название 
+                             [1] => ИНН 
+                             [2] => синонимы 
+                             [3] => дата заведения ) 
+    [CLI_HDR] => Array ( [0] => Название [1] => синонимы [2] => дата заведения [3] => ответственный ) 
+    [DIMENSIONS_ICON] => Array ( [0] => 90 [1] => 90 ) 
+    [DIMENSIONS_PICT] => Array ( [0] => 250 [1] => 250 ) 
+    [STAFF_HDR] => Array ( [0] => логин [1] => ФИО [2] => дата заведения ) 
+    [ITEMFIELDS] => Array ( [mfg] => Поставщик 
+                            [art] => Артикул 
+                            [cats] => Категории 
+                            [descr] => Описание 
+                            [params] => Характеристики 
+                            [images] => Картинки 
+                            [prices] => Цены 
+                            [amounts] => Количества ) 
+    [ITEMPARAMS] => Array ( [brand] => Бренд 
+                            [collection] => Коллекция 
+                            [descr] => Подробное описание 
+                            [manufact] => Производитель 
+                            [color] => Цвет 
+                            [size] => Размер 
+                            [boxtype] => Вид упаковки 
+                            [weight] => Вес 
+                            [countperbox] => Количество в упаковке 
+                            [sizebox] => Размер упаковки 
+                            [print] => Нанесение 
+                            [catpage] => Страница каталога 
+                            [discount] => Страница скидки 
+                            [material] => Материал 
+                            [sizes] => Размер текстиля 
+                            [measure] => Единица измерения 
+                            [descr_full] => Полное описание 
+                            [volumebox] => Объём коробки 
+                            [weightbox] => Вес коробки 
+                            [volume] => Объём 
+                            [new] => Новинка 
+                            [offers] => Акции 
+                            [comment] => Комментарий 
+                            [weights] => Вес текстиля 
+                            [gender] => Половая принадлежность 
+                            [papertype] => Тип бумаги 
+                            [series] => Серия 
+                            [viewtype] => Вид материала 
+                            [blindingtype] => Тип переплёта 
+                            [makeuptype] => Тип блока 
+                            [section] => Тип среза 
+                            [poducttype] => Тип изделия 
+                            [topicalitytype] => Спецпредложение ) 
+    [BITSCOUNT_0] => 4 
+    [PRICEMULT_E] => price_ebazaar:1.00 
+    [AMOUNTSUM_E] => `stock_ebazaar2` 
+    [PRICEMULT_O] => price_oasis:1.00 
+    [AMOUNTSUM_O] => `stock_oasis_sklad` 
+    [FTPOUT] => "ftp://qtw:ced42Sddse@46.36.220.49/www/cat_new/in/" 
+    [PRICEMULT_C] => price_ocean:1.00 
+    [AMOUNTSUM_C] => `stock_ocean_total` 
+    [PRICEMULT_H] => price_happy:1.00 
+    [AMOUNTSUM_H] => `stock_happy_sklad`+`stock_happy_rez` 
+    [PRICEMULT_P] => price_project111:1.00 
+    [AMOUNTSUM_P] => `stock_project111_free` 
+    [PRICEMULT_M] => price_midocean:1.00 
+    [AMOUNTSUM_M] => `stock_midocean` 
+    [PRICEMULT_Q] => price_cuty_opt:1.00 
+    [AMOUNTSUM_Q] => `stock_cuty` 
+    [PRICEMULT_J] => price_eje_final:EUR 
+    [AMOUNTSUM_J] => `stock_eje_stock` 
+    [PRICEVIEW_E] => CONCAT(CAST(TRUNCATE(`price_ebazaar`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_O] => CONCAT(CAST(TRUNCATE(`price_oasis`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_C] => CONCAT(CAST(TRUNCATE(`price_ocean`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_H] => CONCAT(CAST(TRUNCATE(`price_happy`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_P] => CONCAT(CAST(TRUNCATE(`price_project111`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_M] => CONCAT(CAST(TRUNCATE(`price_midocean`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_Q] => CONCAT(CAST(TRUNCATE(`price_cuty_opt`/100,2) AS CHAR),' р.') 
+    [PRICEVIEW_J] => CONCAT(CAST(TRUNCATE(`price_eje_final`/100,2) AS CHAR),' €') 
+    [ITEMPARAMSTYPES] => Array ( [main] => brand,descr,color,size,weight,print,material 
+                                 [hidden] => descr_full,new,offers,topicalitype,gender,comment ) 
+    [DAYLIMIT] => 14 
+    [PRICEMULT_X] => price_xindao:1.00 
+    [AMOUNTSUM_X] => `stock_xindao_eur` 
+    [PRICEVIEW_X] => CONCAT(CAST(TRUNCATE(`price_xindao`/100,2) AS CHAR),' р.') 
+    [PRICEMULT_K] => price_eklektika_main:1.00 
+    [AMOUNTSUM_K] => `stock_eklektika_sklad` 
+    [PRICEVIEW_K] => CONCAT(CAST(TRUNCATE(`price_eklektika_main`/100,2) AS CHAR),' р.') 
+    [PRICEMULT_S] => price_stan_main:1.00 
+    [AMOUNTSUM_S] => IFNULL(`stock_stan_sklad`,0) + IFNULL(`stock_stan_moscow`,0) + IFNULL(`stock_stan_discount`,0) 
+    [PRICEVIEW_S] => CONCAT(CAST(TRUNCATE(`price_stan_main`/100,2) AS CHAR),' р.') 
+    [PRICEMULT_W] => price_rainbow:1.00 
+    [AMOUNTSUM_W] => `stock_rainbow` 
+    [PRICEVIEW_W] => CONCAT(CAST(TRUNCATE(`price_rainbow`/100,2) AS CHAR),' р.') 
+    [SUBSCRIBES] => E,O,C,H,P,M,Q,J,X,R,K,S,W ) 
+[_username] => test 
+[_userid] => 31 
+[_version] => 0 ) 
+*/
 ?>

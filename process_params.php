@@ -22,11 +22,11 @@ mysql_query("SET NAMES utf8",$out_connect);
  ================================================================*/
 $LOCAL_SERVER="localhost";
 $LOCAL_USER="root";
-// $LOCAL_PASS="k0les0";
-$LOCAL_PASS = "4995";
+$LOCAL_PASS="k0les0";
+// $LOCAL_PASS = "4995";
 $LOCAL_DB="test";
 
-$std_connect=mysql_connect($LOCAL_SERVER,$LOCAL_USER,$LOCAL_PASS);
+$std_connect=mysql_connect($LOCAL_SERVER,$LOCAL_USER,$LOCAL_PASS) or die("error on connect to base".mysql_error());
 mysql_select_db($LOCAL_DB,$std_connect);
 mysql_query("SET NAMES utf8",$std_connect);
 echo "connected to local base\n";

@@ -6,8 +6,8 @@ echo $date_string_one
 
 #prapare database connecitons
 user="root"
-# password="kazk0der"
-password="4995"
+password="kazk0der"
+# password="4995"
 database="test"
 prefix="gs3_"
 #dbargs="--defaults-extra-file=/etc/mysql/configs/local.cnf -s -N"

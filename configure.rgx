@@ -177,7 +177,7 @@
 "W","descr","0","<name","<name(?:\s.*?[^\/]?>|>)([^<]+?)<\/name.*?>","{1}"
 "W","prices","rainbow","<price","<price(?:\s.*?[^\/]?>|>)(.+?)<\/price.*?>","{1}"
 "W","amounts","rainbow","<count","<count(?:\s.*?[^\/]?>|>)(.+?)<\/count.*?>","{1}"
-"W","images","img","&lt;image","&lt;image(?:\s.*?[^\/]?&gt;|&gt;)([^<]+?)&lt;\/image.*?&gt;","{1}"
+"W","images","img","<image","<image(?:\s.*?[^\/]?>|>)([^<]+?)<\/image.*?>","{1}"
 "W","params","descr","<description","<description(?:\s.*?[^\/]?>|>)(.+?)<\/description.*?>","{1}"
 "W","params","print","<description","Способ\s*нанесения:([^<]+?)$","{1}"
 "W","params","material","<description","Материал:([^<]+?)$","{1}"

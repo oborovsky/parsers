@@ -40,8 +40,8 @@ done < $infile
 echo "start"
 #prapare database connecitons
 user="root"
-# password="kazk0der"
-password="4995"
+password="kazk0der"
+# password="4995"
 database="test"
 prefix="gs3_"
 dbargs="-s -N --user=${user} --password=${password}"

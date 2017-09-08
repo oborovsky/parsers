@@ -10,8 +10,8 @@ start=`date +%s`
 #rdbargs="--defaults-extra-file=/etc/mysql/configs/vps2.cnf -s -N --database=${rdatabase}"
 
 user="root"
-# password="k0les0"
-password="4995"
+password="k0les0"
+# password="4995"
 database="test"
 dbargs="-s -N --user=${user} --password=${password} --database=${database}"
 

@@ -1,4 +1,5 @@
 log/*.log
 in/*.xml
 in/*.log
+in/*.csv
 sql/out/*

@@ -1,136 +1,285 @@
 <?
-ini_set("session.gc_maxlifetime","0");
-if(!isset($NO_SESSION)) session_start();
-if(!isset($NO_HEADER)) {
-    header("Content-Type: text/html; charset=utf-8");
-    header("Cache-Control: no-store, no-cache, must-revalidate");
-    header("Cache-Control: post-check=0, pre-check=0",false);
-    header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");  
-    header("Last-Modified: ".gmdate("D, d M Y H:i:s")." GMT");  
-    header("Pragma: no-cache");
-}
 set_time_limit(3600);
-ini_set("allow_url_fopen",true);
-ini_set("allow_url_include",true);
-ini_set("gd.jpeg_ignore_warning",1);
-ini_set("display_errors",1);
+//ini_set("display_errors",1);
 mb_internal_encoding("UTF-8");
 mb_regex_encoding('UTF-8');
-error_reporting(E_ALL);
+//error_reporting(E_ALL);
+
+@session_start();
+$ptime=microtime(TRUE);
+
+define("DB_SERVER","localhost");
+define("DB_USER","root");
+define("DB_PASSWD","kazk0der");
+define("DB_BASE","cuty_cat");
 define("COINS",100);
 define("GRAMS",1000);
-$KEY_XIN="X";
-define("ROOT",realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR); //.DIRECTORY_SEPARATOR.".."
-define("LIB",ROOT."system".DIRECTORY_SEPARATOR."library".DIRECTORY_SEPARATOR);
-define("SYSTEM",ROOT."system".DIRECTORY_SEPARATOR);
-define("ICONSERVER","http://images.cuty.ru/icon/");
-include(LIB."fbitmask.php"); // битовые маски
-include(LIB."fmysql.php"); // работа с сиквелем
-include(LIB."fhtml.php"); // аппендиксы сашинкота. убить их нахер, когда всё вычистим...
-include(LIB."fforms.php"); // для выхлопов в формах
-include(LIB."foutputmodifiers.php");// разные представления значений
+define("ROOT",realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR); 
+mysql_connect(DB_SERVER,DB_USER,DB_PASSWD) or die("can't connect".mysql_error());
+mysql_query("SET NAMES utf8");
+mysql_select_db(DB_BASE) or die("wrong DB");
+define("ICONSERVER","$");
+// functions
+function q_($in,$out=0) {
+    $t=mysql_query($in);
+    if($out==0) return($t);
+    if($out==-1) return(mysql_num_rows($t));
+    if($out==-2) return(mysql_affected_rows());
+    if(mysql_num_rows($t)==0) return(FALSE);
+    $p=mysql_fetch_row($t);
+    if($out==1) return($p[0]);
+    return($p); }
 
-// тут будем вычленять домен (всё маленькими буквами)
-define("DOMAIN","max.cuty.ru");
-define("DOMAIN2","max.6tema.com");
-define("DB_ROOT_SERVER","localhost");define("DB_CLIENT_SERVER","localhost");define("DB_ROOT","gs3");define("DB_ROOT_USER","gs");define("DB_ROOT_PASSWD","kazk0der");
-define("DB_PREFIX","gs3_");
-$SUBDOMAIN=FALSE;
-if (preg_match("/^(?:www\.)?([\w\d\-]+)\.(".DOMAIN."|".DOMAIN2.")/",$_SERVER["HTTP_HOST"],$match))
-$SUBDOMAIN=$match[1];
+function suicide() {
+    if(func_num_args()<1) die("Oops");
+    if(func_num_args()>1) foreach(func_get_args() as $i=>$fu)
+    if($i>0) q_("DROP TABLE IF EXISTS `".$fu."`");
+    die(func_get_arg(0)); }
 
-// загрузили список всего того, что надо из глобальной БД
-if(!isset($_SESSION['vars'])) {
-    $tmp_link=mysql_connect(DB_ROOT_SERVER,DB_ROOT_USER,DB_ROOT_PASSWD) or die("Could not connect: ".mysql_error());
-    mysql_select_db(DB_ROOT,$tmp_link);
-    mysql_query("SET NAMES utf8",$tmp_link);
-    if($tmp61=mysql_query("SELECT `title`,`content` FROM `system_config` WHERE `title` LIKE 'arr\_%' OR `title` LIKE 'var\_%'",$tmp_link))
-    while($tmp62=mysql_fetch_row($tmp61)) {
-        $tmp63=substr($tmp62[0],4);
-        if($tmp62[0]{0}=="v") $_SESSION['vars'][$tmp63]=$tmp62[1];
-        else $_SESSION['vars'][$tmp63]=unserialize($tmp62[1]);
-    }
-    mysql_close($tmp_link);
-// теперь поверх загрузили то же самое из локальной
-    if((!isset($MASTER_DB))&&($SUBDOMAIN)) {
-        $tmp_link=mysql_connect(DB_CLIENT_SERVER,DB_PREFIX.$SUBDOMAIN) or die("Could not connect: ".mysql_error());
-        mysql_select_db(DB_PREFIX.$SUBDOMAIN,$tmp_link);
-        mysql_query("SET NAMES utf8",$tmp_link);
-        if($tmp61=mysql_query("SELECT `title`,`content` FROM `system_config` WHERE `title` LIKE 'arr\_%' OR `title` LIKE 'var\_%'",$tmp_link))
-        while($tmp62=mysql_fetch_row($tmp61)) {
-            $tmp63=substr($tmp62[0],4);
-            if($tmp62[0]{0}=="v") $_SESSION['vars'][$tmp63]=$tmp62[1];
-            else if(isset($_SESSION['vars'][$tmp63])) $_SESSION['vars'][$tmp63]=array_merge($_SESSION['vars'][$tmp63],unserialize($tmp62[1]));
-            else $_SESSION['vars'][$tmp63]=unserialize($tmp62[1]);
+function stem_vovels(&$s,$re,$to) {
+    $orig=$s;
+    $s=mb_ereg_replace($re,$to,$s);
+    return $orig!==$s; }
+
+function stem_word($word) {
+    $word=mb_convert_case($word,MB_CASE_LOWER,"UTF-8");
+    $articles=array("без","безо","будто","бы","был","была","было","вглубь","вдоль","взамен","вместо","вне","внизу","внутрь","во","возле","вокруг","вообще","впереди","вроде","все","всего","где","да","даже","для","до","едва","если","еще","же","за","изнутри","или","как","какой","ко","который","кроме","кто","куда","ли","между","мимо","много","на","наверху","над","надо","наподобие","не","недалеко","нет","ниже","но","об","обо","общем","он","она","они","оно","от","откуда","перед","передо","по","поверх","под","подо","позади","поперек","посередине","после","посреди","посредине","при","ровно","рядом","само","сверху","сзади","сквозь","словно","снизу","со","собой","так","типа","то","тоже","только","через","что","чтоб","чтобы","чуть");
+    if(in_array($word,$articles)) return("");
+    stem_vovels($word,'ё','е');
+    $stem = $word;
+    do {
+        if(!mb_eregi('^(.*?[аеиоуыэюя])(.+)$',$word,$p)) break;
+        $RV=$p[2];
+        if (!stem_vovels($RV,'((ив|ивши|ившись|ыв|ывши|ывшись)|((?<=[ая])(в|вши|вшись)))$','')) {
+            stem_vovels($RV,'(с[яь])$', '');
+            if (stem_vovels($RV,'(ее|ие|ые|ое|ими|ыми|ей|ий|ый|ой|ем|им|ым|ом|его|ого|ему|ому|их|ых|ую|юю|ая|яя|ою|ею)$','')) stem_vovels($RV,'((ивш|ывш|ующ)|((?<=[ая])(ем|нн|вш|ющ|щ)))$','');
+            else if (!stem_vovels($RV,'((ила|ыла|ена|ейте|уйте|ите|или|ыли|ей|уй|ил|ыл|им|ым|ен|ило|ыло|ено|ят|ует|уют|ит|ыт|ены|ить|ыть|ишь|ую|ю)|((?<=[ая])(ла|на|ете|йте|ли|й|л|ем|н|ло|но|ет|ют|ны|ть|ешь|нно)))$','')) stem_vovels($RV,'(а|ев|ов|ие|ье|е|иями|ями|ами|еи|ии|и|ией|ей|ой|ий|й|иям|ям|ием|ем|ам|ом|о|у|ах|иях|ях|ы|ь|ию|ью|ю|ия|ья|я)$','');
         }
-    mysql_close($tmp_link);
+        $RV=rtrim($RV,'и');
+        if(mb_ereg('[^аеиоуыэюя][аеиоуыэюя]+[^аеиоуыэюя]+[аеиоуыэюя].*(?<=о)сть?$',$RV))
+        stem_vovels($RV,'ость?$','');
+        if(!stem_vovels($RV,'ь$','')) {
+            stem_vovels($RV,'ейше?','');
+            stem_vovels($RV,'нн$','н');
+        }
+        stem_vovels($RV,'(еньк?$|оньк?$|ечек?$|очек?$|ачек?$|ичек?$|ечк?$|очк?$|ачк?$|ичк?$|иньк?$|ик$|ок$|ек$|)','');
+        $stem=$p[1].$RV;
+    } while(false);
+    return($stem); }
+
+function jO($out) {
+    echo json_encode($out);
+    die; }
+
+function bitmask2array($in,$offset=0) { // делает из HEX массив (in=строка, offset=база, rev=перевернуть строку)
+    $out=array();
+    $in=strtoupper(strrev($in));
+    $t=strlen($in);
+    for($i=0;$i<$t;$i++) {
+        $t0=$offset+(4*$i); $t1=$t0+1;$t2=$t0+2;$t3=$t0+3;
+        switch($in{$i}) {
+           case "0": break;
+           case "F": $out[$t2]=$t2;
+           case "B": $out[$t3]=$t3;
+           case "3": $out[$t1]=$t1;
+           case "1": $out[$t0]=$t0; break;
+           case "E": $out[$t3]=$t3;
+           case "6": $out[$t2]=$t2;
+           case "2": $out[$t1]=$t1; break;
+           case "7": $out[$t1]=$t1;
+           case "5": $out[$t0]=$t0;
+           case "4": $out[$t2]=$t2; break;
+           case "D": $out[$t2]=$t2;
+           case "9": $out[$t0]=$t0;
+           case "8": $out[$t3]=$t3; break;
+           case "C": $out[$t2]=$t2;$out[$t3]=$t3; break;
+           case "A": $out[$t1]=$t1;$out[$t3]=$t3; break;
+        }
     }
+    return $out;
 }
-// вытащили из сессии всё, что там есть
-if(isset($_SESSION['vars'])) foreach($_SESSION['vars'] as $tmp61=>$tmp62) $$tmp61=$tmp62;
 
-function get_column_names() {
-    global $PRICENAMES, $STOCKNAMES, $PRICEGROUPNAMES, $STOCKGROUPNAMES,$SUBDOMAIN;
-    if(isset($STOCKNAMES)) return(TRUE);
-    if(!isset($SUBDOMAIN)) die("No subdomain selected");
-    $PRICENAMES=array(); $STOCKNAMES=array();
-    foreach(explode(",",$_SESSION['vars']['SUBSCRIBES']) as $temp) {
-        $PRICEGROUPNAMES[$temp]=array('descr'=>$_SESSION['vars']['MANUFACTURERS'][$temp],'count'=>sizeof($_SESSION['vars']['PRICES_'.$temp]));
-        $STOCKGROUPNAMES[$temp]=array('descr'=>$_SESSION['vars']['MANUFACTURERS'][$temp],'count'=>sizeof($_SESSION['vars']['STOCKS_'.$temp]));
-        $PRICENAMES[$temp]=$_SESSION['vars']['PRICES_'.$temp];
-        $STOCKNAMES[$temp]=$_SESSION['vars']['STOCKS_'.$temp];
+function bit2string($bit,$pref='bit',$offset=0) {
+    $a=(int)($offset+($bit>>6));
+    $b=$bit%64;
+    return("`".$pref.$a."` & POW(2,".$b.")");
+}
+
+function array_merge_recursive2() {
+    $arrays=func_get_args();
+    $base=array_shift($arrays);
+    foreach($arrays as $array) {
+        reset($base); //important
+        while(list($key, $value)=@each($array))
+            if (is_array($value)&&(@is_array($base[$key]))) $base[$key]=array_merge_recursive2($base[$key], $value);
+            else $base[$key]=$value;
     }
-    $t=mysql_q("SELECT `id`,`value` FROM `stocktypes` ORDER BY `order`");
-    if(mysql_num_rows($t)) while($t1=mysql_fetch_row($t)) {
-        $p=mysql_q("SELECT `id`,`value` FROM `stocks` WHERE `type`=".$t1[0]." ORDER BY `order`");
-        $p1=mysql_num_rows($p);
-        $STOCKGROUPNAMES[$SUBDOMAIN."_".$t1[0]]=array('descr'=>$t1[1],'count'=>$p1);
-        if($p1>0) while($p2=mysql_fetch_row($p)) $STOCKNAMES[$SUBDOMAIN."_".$t1[0]][]=array($p2[0]=>$p2[1]);
+    return $base;
+}
+
+function get_all_tree_stats_old($tree_t) {
+    $q=mysql_query("SELECT `id`,`parent`,`value`,HEX(`settings`) FROM ".$tree_t."WHERE (`settings` & 1 AND NOT `settings` & POW(2,50) AND NOT `settings` & 8) ORDER BY `order`");
+    while($x=mysql_fetch_row($q)) {
+        $arr[$x[0]]['parent']=$x[1];
+        $arr[$x[0]]['name']=$x[2];
+        $arr[$x[0]]['bits']=bitmask2array($x[3]);
+        $arr[$x[1]]['childs'][]=$x[0];
     }
-    $t=mysql_q("SELECT `id`,`value` FROM `pricetypes` ORDER BY `order`");
-    if(mysql_num_rows($t)) while($t1=mysql_fetch_row($t)) {
-        $p=mysql_q("SELECT `id`,`value` FROM `prices` WHERE `type`=".$t1[0]." ORDER BY `order`");
-        $p1=mysql_num_rows($p);
-        $PRICEGROUPNAMES[$SUBDOMAIN."_".$t1[0]]=array('descr'=>$t1[1],'count'=>$p1);
-        if($p1>0) while($p2=mysql_fetch_row($p)) $PRICENAMES[$SUBDOMAIN."_".$t1[0]][]=array($p2[0]=>$p2[1]);
+    return $arr;
+}
+
+function get_tree_branch_old($ttree,$id,$troot=array(4,13,33,47),$conf=array(36=>"bold")) {
+    $out=array();
+    if(!is_array($troot)) $troot=explode(",",$troot);
+    if(!is_array($conf)) {
+        $tmp=explode(",",$conf);
+        $conf=array();
+        foreach($tmp as $tmp1) {
+            $tmp2=explode(":",$tmp1);
+            $conf[$tmp2[0]]=$tmp2[1];
+        }
     }
+    if((isset($ttree[$id]))&&(isset($ttree[$id]['parent']))) {
+        $out[$id]['name']=$ttree[$id]['name'];
+        foreach($conf as $t2=>$t3) if(isset($ttree[$id]['bits'][$t2])) $out[$id][$t3]=1;
+        foreach($troot as $t1) if(isset($ttree[$id]['bits'][$t1])) $id=0;
+        while($id!=0)
+        {
+            if(!isset($ttree[$id]['parent'])) break;
+            $out2=$out;
+            $id=$ttree[$id]['parent'];
+            $out=array($id=>array('children'=>$out2));
+            if(isset($ttree[$id]['name'])) $out[$id]['name']=$ttree[$id]['name'];
+            foreach($conf as $t2=>$t3) if(isset($ttree[$id]['bits'][$t2])) $out[$id][$t3]=1;
+            foreach($troot as $t1) if(isset($ttree[$id]['bits'][$t1])) $id=0;
+        }
+    }
+    return($out);
 }
 
-if(isset($MASTER_DB)) {
-    $std_connect=mysql_connect(DB_ROOT_SERVER,DB_ROOT_USER,DB_ROOT_PASSWD) or die("Could not connect: ".mysql_error($std_connect));
-    mysql_select_db(DB_ROOT,$std_connect);
+function get_tree_leafs($tree_t,$tneeded=array(3),$conf=array(36=>"bold")) {
+    if(!is_array($tneeded)) $tneeded=explode(",",$tneeded);
+    if(!is_array($conf)) {
+        $tmp=explode(",",$conf);
+        $conf=array();
+        foreach($tmp as $tmp1) {
+            $tmp2=explode(":",$tmp1);
+            $conf[$tmp2[0]]=$tmp2[1];
+        }
+    }
+    $out="SELECT `id`,`parent`,`value`,HEX(`settings`) FROM ".$tree_t."WHERE (`settings` & 1 ";
+    foreach($tneeded as $b) $out=$out." AND ( `settings` & POW(2,".$b.") ) ";
+    $q=mysql_query($out.")"); // ORDER BY `order`
+    while($x=mysql_fetch_row($q)) {
+        $arr[$x[0]]['parent']=$x[1];
+        $arr[$x[0]]['name']=$x[2];
+        $tbits=bitmask2array($x[3]);
+//        print_r($tbits);
+        foreach($conf as $t10=>$t11) if(isset($tbits[$t10])) $arr[$x[0]]['bits'][$t10]=$t11;
+        //$arr[$x[1]]['childs'][]=$x[0];
+    }
+    return $arr;    
 }
-else {
-    $std_connect=mysql_connect(DB_CLIENT_SERVER,DB_PREFIX.$SUBDOMAIN) or die("Could not connect: ".mysql_error($std_connect));
-    mysql_select_db(DB_PREFIX.$SUBDOMAIN,$std_connect) or die("Invalid account");
+
+function parsebits($bit_array,$id,$tree) { //,$conf=array(32=>"show",41=>"showsel",44=>"bin")) {
+    $out=array();
+    foreach($bit_array as $bit) $t[]=bit2string($bit)." AS `bit".$bit."`";
+//echo "SELECT ".implode(",",$t)." FROM ".$tree." WHERE `id`=".$id;
+    $pp=q_("SELECT ".implode(",",$t)." FROM ".$tree." WHERE `id`=".$id,2);
+//    print_r($pp);
+//    foreach($conf as $con1=>$con2)
+    foreach($bit_array as $bit1=>$bit2) if((isset($pp[$bit1]))&&($pp[$bit1]!=0)) $out[$bit2]=1;
+    return($out);
 }
-mysql_query("SET NAMES utf8",$std_connect);
-/* список функций
 
-fbitmask.php
-bitmask2array($in,$offset=0,$rev=FALSE) { // делает из HEX массив (in=строка, offset=база, rev=перевернуть строку)
-array2bitmask($in,$offset=0,$amount=64,$rev=FALSE) { // делает из куска массива HEX для сиквеля
-string2array($in) { // делает из CSV строки массив, в котором ключ=значение
-array2string($in,$key=false) { // делает из массива строку через запятую. также убивает лишние запятые
+function item($item,$bits=array(),$key=0,$imgserver="$") {
+//    echo $item[0]."->navernoe v konCe...   ";
+    $t=explode(",",$item[4]);
+    $p=unserialize($item[3]);
+    $amount=(int)($item[6]/GRAMS);
+    $price=$item[5]/COINS;
+    $outt=array("id"=>$item[0],"art"=>$item[1],"name"=>$item[2],"price_view"=>$item[7],"visual"=>$key);
+    $outt["bits"]=$bits;
+    if($amount==0) $outt['outofstock']=1;
+    else if($amount<0) $outt['anyamount']=1;
+    else $outt['amount']=$amount;
+    if($price==0) $outt['noprice']=1;
+    else if($price<0) $outt['ondemand']=1;
+    else $outt['price']=$price;
+    if(isset($p['descr'])) $outt["descr"]=$p['descr'];
+    $outt["addtobasket"]="0";        
+    if(isset($_SESSION['basket'])) {
+        $outt["addtobasket"]="1";
+        if(q_("SELECT * FROM `basket` WHERE `art`='".$item[0]."' AND `user`='".mysql_real_escape_string($_SESSION['basket'])."'",-1)) $outt["inbasket"]="1";
+    }    
+    foreach($t as $t1) $outt["img"][]=str_replace("$",$t1,$imgserver);
+    return($outt);
+}
 
-fmysql.php
-mysql_q($in) { // mysql_query with query printout
-q($table,$id,$field,$type="T",$value=NULL) { // проверяет, изменилось ли значение и меняет его, если надо
-qlist($table,$case="",$order=FALSE) { // список ID-шников [соответствующих условию] [отсортированных по полю order]
+function get_all_tree_stats($tree_t) {
+    $q=mysql_query("SELECT `id`,`parent`,`value`,HEX(`settings`),`order` FROM ".$tree_t."WHERE (`settings` & 1 AND NOT `settings` & POW(2,50) AND NOT `settings` & 8) ORDER BY `order`");
+    while($x=mysql_fetch_row($q)) {
+        $arr[$x[0]]['parent']=$x[1];
+        $arr[$x[0]]['name']=$x[2];
+        $arr[$x[0]]['bits']=bitmask2array($x[3]);
+        $arr[$x[1]]['childs'][]=$x[0];
+        $arr[$x[0]]['order']=$x[4];
+    }
+    return $arr;
+}
 
-foutputmodifiers.php
-uzer($in) { // из юзера делает имя юзера
-klient($in,$in2=0) { // из клиента (и юр.лица) делает название клиента (и название юр.лица в виде массива)
-redate($in) { // преобразует дату в/из сиквеля. на входе либо YYYY-MM-DD, либо [d]d{.-/}[m]m{.-/}[yy]yy, на выходе dd.mm.yyyy или YYYY-MM-DD
+function get_tree_branch($ttree,$id,$troot=array(4,13,33,47),$conf=array(36=>"bold")) {
+    $out=array();
+    if(!is_array($troot)) $troot=explode(",",$troot);
+    if(!is_array($conf)) {
+        $tmp=explode(",",$conf);
+        $conf=array();
+        foreach($tmp as $tmp1) {
+            $tmp2=explode(":",$tmp1);
+            $conf[$tmp2[0]]=$tmp2[1];
+        }
+    }
+    $out[$id]['name']=$ttree[$id]['name'];
+    $out[$id]['order']=$ttree[$id]['order'];
+    $out[$id]['parent']=$ttree[$id]['parent'];
+    $out[$id]['id']=$id;
+    foreach($conf as $t2=>$t3) if(isset($ttree[$id]['bits'][$t2])) $out[$id][$t3]=1;
+    foreach($troot as $t1) if(isset($ttree[$id]['bits'][$t1])) $id=0;
+    if (array_key_exists($id,$ttree))
+    while($id!=0) {
+        $out2=$out;
+        $id=$ttree[$id]['parent'];
+        $out=array($id=>array('children'=>$out2));
+        $out[$id]['name']=$ttree[$id]['name'];
+        $out[$id]['order']=$ttree[$id]['order'];
+        $out[$id]['parent']=$ttree[$id]['parent'];
+        $out[$id]['id']=$id;
+        foreach($conf as $t2=>$t3) if(isset($ttree[$id]['bits'][$t2])) $out[$id][$t3]=1;
+        foreach($troot as $t1) if(isset($ttree[$id]['bits'][$t1])) $id=0;
+    }
+    return($out);
+}
 
-fforms.php
-старые функции, которые бы надо бы переделать... :)
- * ADIN(описание инпута,значение,id поля в js,тип поля,класс передаваемый в js) - добавить инпут
- * ADBT(id кнопки в js,текст на кнопке,параметр) - добавить кнопку
- * ADCK(массив для дополнения, название, описание, 1/0) - добавить чекбокс
- * ADLH(название поля, заголовок текста, строка для добавления, массив доп.заголовков, класс css) - заголовок мультисорта
- * ADLI(массив для дополнения, текст, ID-шник записи, массив доп.полей, класс css) - строка мультисорта
- * ADTR(таблица, массив id:текст:parent:0/1, название для update, id корня) - делает дерево от корня
+function tree_amounts($tree) { // outputs array of amounts assigned to tree IDs
+    $x=array();
+    $a=mysql_query("SELECT `id`,`count` FROM ".$tree." WHERE `count`>0");
+    if(mysql_num_rows($a)) while($b=mysql_fetch_row($a)) $x[$b[0]]=$b[1];
+    return $x;
+}
 
-*/
+function order_order($in,&$amounts) { // insert amounts into tree and sorts
+    $x=array();
+    foreach($in as $a=>$b) {
+        $t=$b['order'];
+        foreach($b as $c=>$d) if(($c!="children")&&($c!="order")) $x[$t][$c]=$d;
+        if((isset($amounts[$b['id']]))&&($amounts[$b['id']]>0)) $x[$t]['amounts']=$amounts[$b['id']];
+        if((isset($b['children']))&&(count($b['children'])>0)) $x[$t]['children']=order_order($b['children'],$amounts);
+    }
+    ksort($x);
+    return(array_values($x));
+}
+
+// end functions
+  
+
 ?>

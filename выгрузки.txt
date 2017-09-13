@@ -4,18 +4,35 @@
 2) предварительный разбор в таблицу tmp_goods ( в 01:00 loadouts_std.sh)
 
 3) потом запускается runparser.sh ->  process_params.php,
-который разбирает tmp_goods на good_prices, img_urls, images, goods_props, hashes, goods_props_current
+который разбирает tmp_goods на goods_prices, img_urls, images, goods_props, hashes, goods_props_current
 по кусочкам.
+	3.1) если в таблице goods_prices записи с таким артиклем нет, то добавляем её,
+			иниче обновляем её.
+	3.2) в таблицу img_urls добавляем запись с (url="url картинки", hash="") и возвращаем (art_id,url_id),
+			где art_id - id записи товара в таблице  goods_prices, url_id - id записи картинки к товару в img_urls,
+			их вставляем в таблицу images
+	3.3) далее шифруем с помощью md5 $art_id.d.$info['desc'], $art_id.p.$info['params'], $art_id.c.$t[4](cat в таблице tmp_goods),
+			разбиваем код каждого на две части по 16 бит ,переводим в строку и делаем выборку со сравнением из таблицы hashes,
+			если в таблице хашей нет хоть одного полученного кода, то
+			вставляем коды в hashes, а (art_id, mfg, descr, images, params, cats) в таблицы goods_props, goods_props_current.
+
 
 4) запускаестся скрипт subscribeupd_new.sh, который загружаетс обновления в базу gs3_blank:
-gs3.goods_prices -> gs3_blank.goods_pricis_tmp -> gs3_blank.goods_prices_0;
+	gs3.goods_prices -> gs3_blank.goods_pricis_tmp -> gs3_blank.goods_prices_0;
+
 добавляте строки в goods_bindings_0, items_0 - если нужно;
+
+sql="SELECT P.id, REPLACE(P.art,' ','_') , P.mfg, B.art_id as ss FROM \`gs3\`.\`goods_prices\` as P LEFT JOIN \`gs3_blank\`.\`goods_bindings_0\` as B ON P.\`id\`=B.art_id HAVING ss is NULL;"
+
 gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
 
 5) затем, сливаем таблицы в csv файлы bitmasks_0 -> bitmasks_0.csv,
 	items_0 -> items_0.csv (новые и с истекшим периодом) , bits_0 -> bits_0.csv ;
 	и в vars_0.csv записываем количество записей в получившихся файлах;
 	и по ftp передаем их на сервер в cat_new/in (скрипт transfer.sh )
+
+	mysql $dbargs $dbuser --execute="SELECT id,arts,mfgs,cats,descr,params,images,price,overprice,prices,amount,overamount,amounts,price_view,ok,uid,upd,CAST(isnew AS UNSIGNED) as intgr INTO OUTFILE '/var/www/${uid}/items_0.csv' CHARACTER SET utf8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' ESCAPED BY '\\\\' LINES TERMINATED BY '\\n' FROM \`items_0\` WHERE \`upd\` > (NOW() - INTERVAL ${timelimit} DAY) OR \`ok\`=1;"
+	
 5.1) файл test.php в cat_new загружает эти csv в базу на сервер
 --------------------------
 параллельно работа с картинками

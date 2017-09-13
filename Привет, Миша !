@@ -122,6 +122,9 @@ gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
 	items_0 -> items_0.csv (новые и с истекшим периодом) , bits_0 -> bits_0.csv ;
 	и в vars_0.csv записываем количество записей в получившихся файлах;
 	и по ftp передаем их на сервер в cat_new/in (скрипт transfer.sh )
+
+	mysql $dbargs $dbuser --execute="SELECT id,arts,mfgs,cats,descr,params,images,price,overprice,prices,amount,overamount,amounts,price_view,ok,uid,upd,CAST(isnew AS UNSIGNED) as intgr INTO OUTFILE '/var/www/${uid}/items_0.csv' CHARACTER SET utf8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' ESCAPED BY '\\\\' LINES TERMINATED BY '\\n' FROM \`items_0\` WHERE \`upd\` > (NOW() - INTERVAL ${timelimit} DAY) OR \`ok\`=1;"
+
 Да, учти что там ещё проверка на дату есть. Если товар не обновлялся более N дней (дата upd в таблице items_0) - он не попадает в эту выгрузку. Параметр устанвливается таблице system_config базы gs3_blank
  
 5.1) файл test.php в cat_new загружает эти csv в базу на сервер
@@ -192,3 +195,18 @@ gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
 
 
 Дима.  
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%P%' LIMIT 0,50
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%O%' LIMIT 0,50
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 15 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%W%' AND `arts` LIKE '%97.03%' AND `amount`>0  LIMIT 0,50
+
+"мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  <div class=superpolovolo><HR><b>Материал</b>: 95% хлопок 5% эластан<b>Плотность</b>: 180 гр/м2</div><div class=super_grid></div><br/><img src='http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg'/><br/><table border='1' rules='all'><tbody><tr><td>Размер</td><td>Рост</td><td>A</td><td>B</td><td>C</td></tr><tr><td>XS/44</td><td>168</td><td>42</td><td>64</td><td>16,5</td></tr><tr><td>S/46</td><td>172</td><td>44</td><td>66</td><td>17,5</td></tr><tr><td>M/48</td><td>176</td><td>46</td><td>68</td><td>18,5</td></tr><tr><td>L/50</td><td>180</td><td>48</td><td>70</td><td>19,5</td></tr><tr><td>XL/52</td><td>184</td><td>50</td><td>72</td><td>20,5</td></tr><tr><td>XXL/54</td><td>188</td><td>52</td><td>74</td><td>21,5</td></tr><tr><td>XXXL/56</td><td>188</td><td>54</td><td>76</td><td>22</td></tr></tbody></table>"
+
+"мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  <div class=superpolovolo><HR><b>Материал</b>: 95% хлопок 5% эластан<b>Плотность</b>: 180 гр/м2</div><div class=super_grid></div><br/><img src='http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg'/><br/><table border='1' rules='all'><tbody><tr><td>Размер</td><td>Рост</td><td>A</td><td>B</td><td>C</td></tr><tr><td>XS/44</td><td>168</td><td>42</td><td>64</td><td>16,5</td></tr><tr><td>S/46</td><td>172</td><td>44</td><td>66</td><td>17,5</td></tr><tr><td>M/48</td><td>176</td><td>46</td><td>68</td><td>18,5</td></tr><tr><td>L/50</td><td>180</td><td>48</td><td>70</td><td>19,5</td></tr><tr><td>XL/52</td><td>184</td><td>50</td><td>72</td><td>20,5</td></tr><tr><td>XXL/54</td><td>188</td><td>52</td><td>74</td><td>21,5</td></tr><tr><td>XXXL/56</td><td>188</td><td>54</td><td>76</td><td>22</td></tr></tbody></table>"
+
+SELECT * FROM `goods_bindings_0` WHERE art_id in (select id from gs3.goods_prices where mfg="W")
+
+"мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  &lt;div class=superpolovolo&gt;&lt;HR&gt;&lt;b&gt;Материал&lt;/b&gt;: 95% хлопок 5% эластан&lt;b&gt;Плотность&lt;/b&gt;: 180 гр/м2&lt;/div&gt;&lt;div class=super_grid&gt;&lt;/div&gt;&lt;br/&gt;&lt;img src="http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg"/&gt;&lt;br/&gt;&lt;table border="1" rules="all"&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;Размер&lt;/td&gt;&lt;td&gt;Рост&lt;/td&gt;&lt;td&gt;A&lt;/td&gt;&lt;td&gt;B&lt;/td&gt;&lt;td&gt;C&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XS/44&lt;/td&gt;&lt;td&gt;168&lt;/td&gt;&lt;td&gt;42&lt;/td&gt;&lt;td&gt;64&lt;/td&gt;&lt;td&gt;16,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;S/46&lt;/td&gt;&lt;td&gt;172&lt;/td&gt;&lt;td&gt;44&lt;/td&gt;&lt;td&gt;66&lt;/td&gt;&lt;td&gt;17,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;M/48&lt;/td&gt;&lt;td&gt;176&lt;/td&gt;&lt;td&gt;46&lt;/td&gt;&lt;td&gt;68&lt;/td&gt;&lt;td&gt;18,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;L/50&lt;/td&gt;&lt;td&gt;180&lt;/td&gt;&lt;td&gt;48&lt;/td&gt;&lt;td&gt;70&lt;/td&gt;&lt;td&gt;19,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XL/52&lt;/td&gt;&lt;td&gt;184&lt;/td&gt;&lt;td&gt;50&lt;/td&gt;&lt;td&gt;72&lt;/td&gt;&lt;td&gt;20,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XXL/54&lt;/td&gt;&lt;td&gt;188&lt;/td&gt;&lt;td&gt;52&lt;/td&gt;&lt;td&gt;74&lt;/td&gt;&lt;td&gt;21,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XXXL/56&lt;/td&gt;&lt;td&gt;188&lt;/td&gt;&lt;td&gt;54&lt;/td&gt;&lt;td&gt;76&lt;/td&gt;&lt;td&gt;22&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;"
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 15 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%K%' LIMIT 0,50

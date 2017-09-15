@@ -81,8 +81,8 @@ function make_products($products)
             echo "для art:$art катероия пуста, cat_id=$cat_id \n";
         }
         $data = $offer->asXML();
-        $data = preg_replace('/&gt;/', '>', $data);
-        $data = preg_replace('/&lt;/', '<', $data);
+        // $data = preg_replace('/&gt;/', '>', $data);
+        // $data = preg_replace('/&lt;/', '<', $data);
         // echo $data, "\n";
         $sql = "('".$KEY_RAINBOW."','".mysql_real_escape_string($art)."','".mysql_real_escape_string($category)."','".mysql_real_escape_string($data)."')";
         // echo $sql, "\n";
@@ -103,12 +103,25 @@ foreach ($products->offer as $offer)
         $offer->images->addChild('image',$image);
 	}
     $art = (string)$offer->art;
-    if ( $art == "97.03")
+    if ( $art != "")
     {
         
         $regx1 = "<img\s*?.*?>([^<]*?)<\/img.*?>";
         $regx2 = "<table(?:\s.*?[^\/]?>|>)(.+?)<\/table.*?>";
+        $regx_material = "Материал.*?:([^<]+?)(?:$|<\/div>|Плотность|Способ[^>]+?нанесения|Размер[^>]+?изделия|Вес|Размер[^>]+?рекламной[^>]+?вставки|Размер[^>]+?шильда|Объем)";
+        $regx_density = "Плотность.*?:([^<]+?)(?:$|<\/div>|Материал|Способ[^>]+?нанесения|Размер[^>]+?изделия|Вес|Размер[^>]+?рекламной[^>]+?вставки|Размер[^>]+?шильда|Объем)";
         $description = (string)$offer->description;
+        // echo $description;
+        preg_match_all("/".$regx_material."/sm",$description,$result,PREG_SET_ORDER);
+        // print_r($result);
+        $all_string = $result[0][0];
+        $material = trim($result[0][1]);
+     
+        echo $all_string," == > ", $material, "\n";
+    	if($material == "") echo $description,"\n";
+    	echo "--------------------------------------","\n";
+        // preg_match_all("/".$regx_density."/sm",$description,$result,PREG_SET_ORDER);
+        // print_r($result);
         preg_match_all("/".$regx1."/sm",$description,$result,PREG_SET_ORDER);
         if ( isset($result[0][0]))
         {
@@ -124,11 +137,11 @@ foreach ($products->offer as $offer)
             // echo "src ",$src,"\n";
             $image->img['src'] = $src;
             $stringImage = $image->img->asXML();
-            echo "image:",$stringImage , "\n";
-            $stringImage = preg_replace('/\"/', "'", $stringImage);    
-            echo "image:",$stringImage , "\n";
+            // echo "image:",$stringImage , "\n";
+            // $stringImage = preg_replace('/\"/', "'", $stringImage);    
+            // echo "image:",$stringImage , "\n";
             $description = preg_replace("/(.*?)(".$regx1.")(.*?)/","", $description);
-            $description = $description."<br/>".$stringImage;    
+            // $description = $description."<br/>".$stringImage;    
         }
 
         preg_match_all("/".$regx2."/sm",$description,$result,PREG_SET_ORDER);
@@ -141,12 +154,12 @@ foreach ($products->offer as $offer)
             $doc->table->addAttribute('rules','all');
 
             $table = (string)$doc->table->asXML();
-            echo "table:",$table,"\n";
-            $table = preg_replace('/\"/', "'", $table);    
-            echo "table:",$table,"\n";
+            // echo "table:",$table,"\n";
+            // $table = preg_replace('/\"/', "'", $table);    
+            // echo "table:",$table,"\n";
 
             $description = preg_replace("/(.*?)(".$regx2.")(.*?)/","", $description);
-            $description = $description."<br/>".$table;
+            // $description = $description."<br/>".$table;
         }
         $offer->description = $description;
         // $data = $offer->asXML();
@@ -156,7 +169,7 @@ foreach ($products->offer as $offer)
         // echo "--------------------\n";
         // $offer->description = $description;
         // echo "offer->asXML :",$offer->asXML(),"\n";
-    }
+	    }
     // foreach ($offer->images->image as $image) 
     // {
     //     echo "\t",(string)$image->asXML(), "\n";
@@ -170,6 +183,6 @@ make_cat($tree);
 make_products($products);
 
 $d=count($out_array);
-if($d) mysql_q("INSERT INTO `tmp_goods`(`mfg`,`art`,`cat`,`xml`) VALUES ".implode(",",$out_array));
+// if($d) mysql_q("INSERT INTO `tmp_goods`(`mfg`,`art`,`cat`,`xml`) VALUES ".implode(",",$out_array));
 echo "done:".$d."\n";
 ?>

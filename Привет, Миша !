@@ -210,3 +210,39 @@ SELECT * FROM `goods_bindings_0` WHERE art_id in (select id from gs3.goods_price
 
 "мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  &lt;div class=superpolovolo&gt;&lt;HR&gt;&lt;b&gt;Материал&lt;/b&gt;: 95% хлопок 5% эластан&lt;b&gt;Плотность&lt;/b&gt;: 180 гр/м2&lt;/div&gt;&lt;div class=super_grid&gt;&lt;/div&gt;&lt;br/&gt;&lt;img src="http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg"/&gt;&lt;br/&gt;&lt;table border="1" rules="all"&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;Размер&lt;/td&gt;&lt;td&gt;Рост&lt;/td&gt;&lt;td&gt;A&lt;/td&gt;&lt;td&gt;B&lt;/td&gt;&lt;td&gt;C&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XS/44&lt;/td&gt;&lt;td&gt;168&lt;/td&gt;&lt;td&gt;42&lt;/td&gt;&lt;td&gt;64&lt;/td&gt;&lt;td&gt;16,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;S/46&lt;/td&gt;&lt;td&gt;172&lt;/td&gt;&lt;td&gt;44&lt;/td&gt;&lt;td&gt;66&lt;/td&gt;&lt;td&gt;17,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;M/48&lt;/td&gt;&lt;td&gt;176&lt;/td&gt;&lt;td&gt;46&lt;/td&gt;&lt;td&gt;68&lt;/td&gt;&lt;td&gt;18,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;L/50&lt;/td&gt;&lt;td&gt;180&lt;/td&gt;&lt;td&gt;48&lt;/td&gt;&lt;td&gt;70&lt;/td&gt;&lt;td&gt;19,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XL/52&lt;/td&gt;&lt;td&gt;184&lt;/td&gt;&lt;td&gt;50&lt;/td&gt;&lt;td&gt;72&lt;/td&gt;&lt;td&gt;20,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XXL/54&lt;/td&gt;&lt;td&gt;188&lt;/td&gt;&lt;td&gt;52&lt;/td&gt;&lt;td&gt;74&lt;/td&gt;&lt;td&gt;21,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XXXL/56&lt;/td&gt;&lt;td&gt;188&lt;/td&gt;&lt;td&gt;54&lt;/td&gt;&lt;td&gt;76&lt;/td&gt;&lt;td&gt;22&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;"
 SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 15 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%K%' LIMIT 0,50
+
+SELECT `bits_59f82d82089a4`.`id`,`items_59f82d82089a4`.`arts`,`items_59f82d82089a4`.`descr`,`items_59f82d82089a4`.`params`,`items_59f82d82089a4`.`images`,`items_59f82d82089a4`.`price`,`items_59f82d82089a4`.`amount`,`items_59f82d82089a4`.`price_view`,`items_59f82d82089a4`.`isnew` FROM `bits_59f82d82089a4`,`items_59f82d82089a4`  WHERE  `bits_59f82d82089a4`.`id`=`items_59f82d82089a4`.`id` AND ( ( `bits_59f82d82089a4`.`bit1` & POW(2,11) ) ) AND `items_59f82d82089a4`.`amount` <> 0  ORDER BY `items_59f82d82089a4`.`price`>0 DESC, `items_59f82d82089a4`.`price` 
+
+SELECT DISTINCT `items_59f82d82089a4`.`id`,
+				`items_59f82d82089a4`.`arts`,
+				`items_59f82d82089a4`.`descr`,
+				`items_59f82d82089a4`.`params`,
+				`items_59f82d82089a4`.`images`,
+				`items_59f82d82089a4`.`price`,
+				`items_59f82d82089a4`.`amount`,
+				`items_59f82d82089a4`.`price_view`,
+				`A`.`vis` as `vis`,
+				`items_59f82d82089a4`.`isnew` 
+FROM `items_59f82d82089a4`,
+	 ( SELECT '1' AS `vis`,
+	 		  `artid` 
+	   FROM `arts_59f82d82089a4` 
+	   WHERE `art` LIKE BINARY 'красный' 
+	   UNION 
+	   		SELECT '2' AS `vis`,
+	 		  		`artid` 
+	 		FROM `arts_59f82d82089a4` 
+	 		WHERE `art` LIKE BINARY 'красный%' AND  `art` NOT LIKE BINARY 'красный' 
+	 		UNION 
+	 			  SELECT '3' AS `vis`,
+	 			  		`artid` FROM `arts_59f82d82089a4` 
+	 			  WHERE `art` LIKE BINARY '%красный%' AND  `art` NOT LIKE BINARY 'красный%' 
+	 			  UNION 
+	 			  		SELECT '4' AS `vis`,
+	 			  			   `items_59f82d82089a4`.`id` AS `artid` 
+	 			  	    FROM `items_59f82d82089a4` WHERE  MATCH (`items_59f82d82089a4`.`descr`) AGAINST(' +красн*' IN BOOLEAN MODE) 
+	 ) as `A` 
+ WHERE  `items_59f82d82089a4`.`id`=`A`.`artid` AND (`items_59f82d82089a4`.`amount` <> 0 OR `vis`<3) 
+ ORDER BY `vis`,`items_59f82d82089a4`.`price`>0 DESC, `items_59f82d82089a4`.`price` 
+
+ SELECT '1' AS `vis`,`artid` FROM `arts_59f82d82089a4` WHERE `art` LIKE BINARY 'красный' UNION SELECT '2' AS `vis`,`artid` FROM `arts_59f82d82089a4` WHERE `art` LIKE BINARY 'красный%' AND  `art` NOT LIKE BINARY 'красный' UNION SELECT '3' AS `vis`,`artid` FROM `arts_59f82d82089a4` WHERE `art` LIKE BINARY '%красный%' AND  `art` NOT LIKE BINARY 'красный%' UNION SELECT '4' AS `vis`,`items_59f82d82089a4`.`id` AS `artid` FROM `items_59f82d82089a4` WHERE  MATCH (`items_59f82d82089a4`.`descr`) AGAINST(' +красн*' IN BOOLEAN MODE);

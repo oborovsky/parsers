@@ -1,0 +1,248 @@
+Привет, Миша !
+
+Это Дима Оборовский, я тут разбирался с вугрузками - возникли вопросы.
+
+часть 1
+==========
+Для начала, опишу как я понял схему работы выгрузок:
+
+1) загружаем xml поставщиков ( в 00:00 downloads.sh)
+
+2) предварительный разбор в таблицу tmp_goods ( в 01:00 loadouts_std.sh)
+
+3) потом запускается runparser.sh ->  process_params.php,
+который разбирает tmp_goods на good_prices, img_urls, images, goods_props, hashes, goods_props_current
+по кусочкам.
+
+4) запускаестся скрипт subscribeupd_new.sh, который загружает обновления в из gs3 в базу gs3_blank:
+gs3.goods_prices -> gs3_blank.goods_pricis_tmp -> gs3_blank.goods_prices_0;
+добавляте строки в goods_bindings_0, items_0 - если нужно;
+gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
+
+5) затем, сливаем таблицы в csv файлы bitmasks_0 -> bitmasks_0.csv,
+	items_0 -> items_0.csv (новые и с истекшим периодом) , bits_0 -> bits_0.csv ;
+	и в vars_0.csv записываем количество записей в получившихся файлах;
+	и по ftp передаем их на сервер в cat_new/in (скрипт transfer.sh )
+5.1) файл test.php в cat_new загружает эти csv в базу на сервер
+--------------------------
+параллельно работа с картинками
+6) images_download.sh берёт адрес из img_urls, если для этой записи hash='' & state=0
+ и скачивает картинку в папку /var/www/images/ , если скачивается - иначе обновляет state=1,
+ и добавляет в таблицу imagefiles запись, связывающую hash и filename  в папке /var/www/images
+
+7) images_cure.sh пытается скачать картинки точно так же, как и images_download.sh, в случае неудачи
+увеличивая поле state на +1
+
+8) таблица images связывает картинки с товаром : art_id - > goods_prices, url_id -> img_urls;
+при state > 0 - картинка ещё не связана с товаром, тогда проверяет :скачена ли картинка, если да, то goods_prices.images +=img_urls.hash, state = 0;
+иначе state++
+(скрипт updateimages.sh)
+9) скрипт imagefiles.sh выгружает таблицу в файл imagefiles.sql и по ftp передаёт его на сервер
+в папку cat_new/in
+---------------------------------------------------------------------------------------------------
+все эти скрипты запускаются через cron в прописанное время.
+Внимание вопос :)
+
+по части 1: верна ли схема и мжет есть ещё какие-нибудь тонкости ?
+
+часть 2
+===============
+Меня попросили написать обработчик выгрузки из каталога Радуги.
+Для этого я : 
+1) написал парсер первой стадии в папку parsers/stat1e/
+2) добавил реги в configure.rgx что в папке parsers/state2/
+3) плюс правил таблицы:
+
+gs3
+-----------------
+system_config - добавил записи var_KEY_RAINBOW=W, arr_PRICES_W=a:1:{s:13:"price_rainbow";s:22:"розничная цена rainbow";},
+				arr_STOCKS_W=a:1:{s:13:"stock_rainbow";s:31:"Радуга (на складе)";} 
+				и в запись arr_MANUFACTURERS добавил s:1:"W";s:7:"Rainbow" получилось:
+				a:13:{s:1:"E";s:7:"Ebazaar";s:1:"O";s:5:"OASIS";s:1:"C";s:5:"OCEAN";s:1:"H";s:11:"HAPPY gifts";s:1:"P";s:11:"Project 111";s:1:"M";s:16:"Mid Ocean Brands";s:1:"Q";s:29:"Локальный склад";s:1:"J";s:6:"ЕЖЕ";s:1:"X";s:6:"XINDAO";s:1:"R";s:14:"РосТайм";s:1:"K";s:18:"Эклектика";s:1:"S";s:4:"STAN";s:1:"W";s:7:"Rainbow";}
+goods_prices - добавил поля price_rainbow, price_rainbow_, stock_rainbow, stock_rainbow_
+
+gs3_blank
+-----------------
+system_config - добавил записи var_PRICEMULT_W=price_rainbow:1.00, var_AMOUNTSUM_W=`stock_rainbow`, 
+				var_PRICEVIEW_W=CONCAT(CAST(TRUNCATE(`price_rainbow`/100,2) AS CHAR),' р.')
+				и в запись var_SUBSCRIBES добавил W получилось:
+				E,O,C,H,P,M,Q,J,X,R,K,S,W
+bitmasks_0   -  добивил запись INSERT INTO `bitmasks_0` (`id`, `parent`, `value`, `order`, `hvost`, `settings`, `uid`, `upd`) VALUES
+				(272, 21, 'Rainbow', 256, '263,265,264,121', 72625749491713, 2, NULL);
+________________________________________________________________________________________________________
+
+Внимание вопос :)
+по части 2:     
+1) Подозреваю, что где-то в системе есть интерфейс по добавлению нового каталога (судя по сериализованным массивам в таблицах ), но что-то не могу его найти, - где он ?
+2) Обрисуй схему, как ты действовал, добавляя новый катлог .
+3) Расскажи: какие характерные ошибки ты помнишь и как их решал ( говорят оазис часто ломается)
+4) есть ли какие-нибудь инфы и где они лежат ?
+
+
+Дима.  
+
+Ответ _______________________________________________________________________________________
+Привет!
+Комментирую.
+
+
+2017-09-06 17:00 GMT+07:00 Дмитрий Оборовский <d.oborovsky.cuty@gmail.com>:
+Привет, Миша !
+
+Это Дима Оборовский, я тут разбирался с вугрузками - возникли вопросы.
+
+часть 1
+==========
+Для начала, опишу как я понял схему работы выгрузок:
+
+1) загружаем xml поставщиков ( в 00:00 downloads.sh)
+
+2) предварительный разбор в таблицу tmp_goods ( в 01:00 loadouts_std.sh)
+Сюда сливается XML кусками. Можешь в парсере state1 готовитькуски нужным образом чтобы было легче парсить. В некоторых каталогах замудрено картинки сделаны
+Ещё есть скрипт loadouts_cuty, который заполняет таблицу tmp_goods прямиком из базы глосиса. Запускается каждые пару часов. Обновляет товары из глосиса.
+
+
+3) потом запускается runparser.sh ->  process_params.php,
+который разбирает tmp_goods на good_prices, img_urls, images, goods_props, hashes, goods_props_current
+по кусочкам.
+Там не просто разбор по кусочкам, а по кусочкам и того-же configure.rgx с regex-ами
+И учитывается встречался ли такой параметр ранее. Всё записывается в таблицу hashes, На самом деле по тому как сейчас каталог работает - эта проверка не очень то и нужна.
+ 
+
+4) запускаестся скрипт subscribeupd_new.sh, который загружает обновления в из gs3 в базу gs3_blank:
+gs3.goods_prices -> gs3_blank.goods_pricis_tmp -> gs3_blank.goods_prices_0;
+На этом шаге важно отметить что пересоздаётся таблица goods_prices_0, на случай, если появляются новые поля для нового каталога, обновление таблиц
+ 
+добавляте строки в goods_bindings_0, items_0 - если нужно;
+gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
+Это нужно, чтобы сразу обновить новые записи. Если делать по-другому, могут появиться дубли товаров
+ 
+
+5) затем, сливаем таблицы в csv файлы bitmasks_0 -> bitmasks_0.csv,
+	items_0 -> items_0.csv (новые и с истекшим периодом) , bits_0 -> bits_0.csv ;
+	и в vars_0.csv записываем количество записей в получившихся файлах;
+	и по ftp передаем их на сервер в cat_new/in (скрипт transfer.sh )
+
+	mysql $dbargs $dbuser --execute="SELECT id,arts,mfgs,cats,descr,params,images,price,overprice,prices,amount,overamount,amounts,price_view,ok,uid,upd,CAST(isnew AS UNSIGNED) as intgr INTO OUTFILE '/var/www/${uid}/items_0.csv' CHARACTER SET utf8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' ESCAPED BY '\\\\' LINES TERMINATED BY '\\n' FROM \`items_0\` WHERE \`upd\` > (NOW() - INTERVAL ${timelimit} DAY) OR \`ok\`=1;"
+
+Да, учти что там ещё проверка на дату есть. Если товар не обновлялся более N дней (дата upd в таблице items_0) - он не попадает в эту выгрузку. Параметр устанвливается таблице system_config базы gs3_blank
+ 
+5.1) файл test.php в cat_new загружает эти csv в базу на сервер
+Да, здесь так же стоит защита от дураков. Сперва создаются копии таблиц, если всё ОК, то старые таблицы заменяются новыми в конфигах. И там ещё ньюанс - в один из файлов чуть ли не в javascript прописывается количество товаров.
+ 
+--------------------------
+параллельно работа с картинками
+6) images_download.sh берёт адрес из img_urls, если для этой записи hash='' & state=0
+ и скачивает картинку в папку /var/www/images/ , если скачивается - иначе обновляет state=1,
+ и добавляет в таблицу imagefiles запись, связывающую hash и filename  в папке /var/www/images
+Да, он скачивает только свежие картинки
+ 
+
+7) images_cure.sh пытается скачать картинки точно так же, как и images_download.sh, в случае неудачи
+увеличивая поле state на +1
+Этот скрипт имеет более долгое время ожидания соединения и скачивания, для скачивания картинок с медленным соединением
+ 
+
+8) таблица images связывает картинки с товаром : art_id - > goods_prices, url_id -> img_urls;
+при state > 0 - картинка ещё не связана с товаром, тогда проверяет :скачена ли картинка, если да, то goods_prices.images +=img_urls.hash, state = 0;
+иначе state++
+Типат того. Эти картинки потом едут в images_0 в базе gs3_blank. Но там есть хитрость. Не обновляются для товаров у которых ok!=0. Это нужно чтобы загруженные вручную картинки через интерфейс разборщика не перезаписались автоматом.
+
+(скрипт updateimages.sh)
+9) скрипт imagefiles.sh выгружает таблицу в файл imagefiles.sql и по ftp передаёт его на сервер
+в папку cat_new/in
+Насколько я помню, там должны выгружаться только свежие картинки, а не все.
+ 
+---------------------------------------------------------------------------------------------------
+все эти скрипты запускаются через cron в прописанное время.
+Внимание вопос :)
+
+по части 1: верна ли схема и мжет есть ещё какие-нибудь тонкости ?
+В целом да, схема верна.
+Такого интерфейса нет, увы. Каталоги пока что добавляются руками, т.к. это не частая задача.
+
+2) Обрисуй схему, как ты действовал, добавляя новый катлог .
+Примерно как и ты.
+1) Сперва долго смотрел на один или несколько XML-файлов поставщика и тихо матерился пытаясь понять какие параметры у нас уже есть 
+2) Если видел что мне было что-то удобнее сделать если бы файлы выглядели как-то иначе - запрашивал возможности у спецов каталога (через Алёну)
+3) Писал парсер который формировал бы мне таблицу tmp_goods, старясь оптимизировать работу скрипта.
+4) Составлял regex-ы в configure.rgx для вытаскивания нухных параметров каталога. Есть интерфейс на максимусе где-то в /system/toolds который позволяет тестировать таблицу regex на выборке.
+- временно отключаешь скрипты разбора в crontab-e, или через интерфейс там же в /system/tools
+- запускаешь свой парсер чтобы он навалил товаров в tmp_goods
+- идёшь в интерфейс проверки regex-ов. Ставишь нужный каталог (возможно сперва придётся его прописать в system_config) и отлаживаешь свой парсер. Стараешься покрыть как можно больше категорий товаров.
+5) Там же в confogure.rgx настраивал параметры чтобы каждый упал в свою ячейку массива. Если вводишь новый параметр - нужно его добавлять в system-config в сериализованный массив
+6) Обновлял таблицу goods_prices в gs3, добавляя нужные параметры для цен и количество
+7) Добавлял ценыи колиичества в массивы в system_config
+8) Тестировал разбор одного каталога
+
+ВАЖНО! Картинки и часть параметров приезжают в систему после второго раза.
+
+ 
+3) Расскажи: какие характерные ошибки ты помнишь и как их решал ( говорят оазис часто ломается)
+Оазис часто ломается по однйо из двух причин: 
+1) Рассинхрон по времени. Например, файл выгрузки на их стороне генерируется в то же время как и у нас
+2) Парсер выдаёт кучу ошибок, возможно из-за этого запущенный через кронтаб парсер валится. Я вроде исправлял, но реально не тестировал.
+Они там часто что-то меняют. Часть их файлов которые мы качали уже отсутсвует на их сервере. Нужно снова поднимать документацию по их выгрузкам и читать что изменилось.
+
+Вообще важно последовательно по пунктам всё тестировать. Основные ошибки - это парсеры, котторым могут попасться не предусмотренные данные. Например, пустые или отрицательные цены.
+Из ошибок были дубли товаров. Возможно и сейчас есть. Писал мини-скрипты которыми всё это дело чистил.
+Обращай внимание на количество товаров в каталоге на сайте в разделе "КАТАЛОГ". Должно быть около 60К. Так что легко понять если что-то не приехало.
+Первое что можно сделать в случае проблем - увеличить количество дней просрочки товаров и выгрузить каталог ещё раз, чтобы на сайте было как можно больше товаров, а уже потом разбираться.
+ 
+4) есть ли какие-нибудь инфы и где они лежат ?
+Есть документация по выгрузкам которую я писал. В моей папке mlsf на кубике есть файл с наследием для прогаммиста. Называются как-то в таком духе. И я вроде на web или IT и даже Николаю по почте высылал.
+ 
+
+
+Дима.  
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%P%' LIMIT 0,50
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%O%' LIMIT 0,50
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 15 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%W%' AND `arts` LIKE '%97.03%' AND `amount`>0  LIMIT 0,50
+
+"мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  <div class=superpolovolo><HR><b>Материал</b>: 95% хлопок 5% эластан<b>Плотность</b>: 180 гр/м2</div><div class=super_grid></div><br/><img src='http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg'/><br/><table border='1' rules='all'><tbody><tr><td>Размер</td><td>Рост</td><td>A</td><td>B</td><td>C</td></tr><tr><td>XS/44</td><td>168</td><td>42</td><td>64</td><td>16,5</td></tr><tr><td>S/46</td><td>172</td><td>44</td><td>66</td><td>17,5</td></tr><tr><td>M/48</td><td>176</td><td>46</td><td>68</td><td>18,5</td></tr><tr><td>L/50</td><td>180</td><td>48</td><td>70</td><td>19,5</td></tr><tr><td>XL/52</td><td>184</td><td>50</td><td>72</td><td>20,5</td></tr><tr><td>XXL/54</td><td>188</td><td>52</td><td>74</td><td>21,5</td></tr><tr><td>XXXL/56</td><td>188</td><td>54</td><td>76</td><td>22</td></tr></tbody></table>"
+
+"мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  <div class=superpolovolo><HR><b>Материал</b>: 95% хлопок 5% эластан<b>Плотность</b>: 180 гр/м2</div><div class=super_grid></div><br/><img src='http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg'/><br/><table border='1' rules='all'><tbody><tr><td>Размер</td><td>Рост</td><td>A</td><td>B</td><td>C</td></tr><tr><td>XS/44</td><td>168</td><td>42</td><td>64</td><td>16,5</td></tr><tr><td>S/46</td><td>172</td><td>44</td><td>66</td><td>17,5</td></tr><tr><td>M/48</td><td>176</td><td>46</td><td>68</td><td>18,5</td></tr><tr><td>L/50</td><td>180</td><td>48</td><td>70</td><td>19,5</td></tr><tr><td>XL/52</td><td>184</td><td>50</td><td>72</td><td>20,5</td></tr><tr><td>XXL/54</td><td>188</td><td>52</td><td>74</td><td>21,5</td></tr><tr><td>XXXL/56</td><td>188</td><td>54</td><td>76</td><td>22</td></tr></tbody></table>"
+
+SELECT * FROM `goods_bindings_0` WHERE art_id in (select id from gs3.goods_prices where mfg="W")
+
+"мужская футболка-стрейч  прилегающий крой  эластичная окантовка горловины  полотно с обработкой «anti-pill» (против катышек)  &lt;div class=superpolovolo&gt;&lt;HR&gt;&lt;b&gt;Материал&lt;/b&gt;: 95% хлопок 5% эластан&lt;b&gt;Плотность&lt;/b&gt;: 180 гр/м2&lt;/div&gt;&lt;div class=super_grid&gt;&lt;/div&gt;&lt;br/&gt;&lt;img src="http://ra-duga.ru/catalog_images/grid/97.03_grid.jpg"/&gt;&lt;br/&gt;&lt;table border="1" rules="all"&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;Размер&lt;/td&gt;&lt;td&gt;Рост&lt;/td&gt;&lt;td&gt;A&lt;/td&gt;&lt;td&gt;B&lt;/td&gt;&lt;td&gt;C&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XS/44&lt;/td&gt;&lt;td&gt;168&lt;/td&gt;&lt;td&gt;42&lt;/td&gt;&lt;td&gt;64&lt;/td&gt;&lt;td&gt;16,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;S/46&lt;/td&gt;&lt;td&gt;172&lt;/td&gt;&lt;td&gt;44&lt;/td&gt;&lt;td&gt;66&lt;/td&gt;&lt;td&gt;17,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;M/48&lt;/td&gt;&lt;td&gt;176&lt;/td&gt;&lt;td&gt;46&lt;/td&gt;&lt;td&gt;68&lt;/td&gt;&lt;td&gt;18,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;L/50&lt;/td&gt;&lt;td&gt;180&lt;/td&gt;&lt;td&gt;48&lt;/td&gt;&lt;td&gt;70&lt;/td&gt;&lt;td&gt;19,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XL/52&lt;/td&gt;&lt;td&gt;184&lt;/td&gt;&lt;td&gt;50&lt;/td&gt;&lt;td&gt;72&lt;/td&gt;&lt;td&gt;20,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XXL/54&lt;/td&gt;&lt;td&gt;188&lt;/td&gt;&lt;td&gt;52&lt;/td&gt;&lt;td&gt;74&lt;/td&gt;&lt;td&gt;21,5&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;XXXL/56&lt;/td&gt;&lt;td&gt;188&lt;/td&gt;&lt;td&gt;54&lt;/td&gt;&lt;td&gt;76&lt;/td&gt;&lt;td&gt;22&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;"
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 15 DAY) && `ok`=0) || `ok`>0) AND `mfgs` LIKE'%K%' LIMIT 0,50
+
+SELECT `bits_59f82d82089a4`.`id`,`items_59f82d82089a4`.`arts`,`items_59f82d82089a4`.`descr`,`items_59f82d82089a4`.`params`,`items_59f82d82089a4`.`images`,`items_59f82d82089a4`.`price`,`items_59f82d82089a4`.`amount`,`items_59f82d82089a4`.`price_view`,`items_59f82d82089a4`.`isnew` FROM `bits_59f82d82089a4`,`items_59f82d82089a4`  WHERE  `bits_59f82d82089a4`.`id`=`items_59f82d82089a4`.`id` AND ( ( `bits_59f82d82089a4`.`bit1` & POW(2,11) ) ) AND `items_59f82d82089a4`.`amount` <> 0  ORDER BY `items_59f82d82089a4`.`price`>0 DESC, `items_59f82d82089a4`.`price` 
+
+SELECT DISTINCT `items_59f82d82089a4`.`id`,
+				`items_59f82d82089a4`.`arts`,
+				`items_59f82d82089a4`.`descr`,
+				`items_59f82d82089a4`.`params`,
+				`items_59f82d82089a4`.`images`,
+				`items_59f82d82089a4`.`price`,
+				`items_59f82d82089a4`.`amount`,
+				`items_59f82d82089a4`.`price_view`,
+				`A`.`vis` as `vis`,
+				`items_59f82d82089a4`.`isnew` 
+FROM `items_59f82d82089a4`,
+	 ( SELECT '1' AS `vis`,
+	 		  `artid` 
+	   FROM `arts_59f82d82089a4` 
+	   WHERE `art` LIKE BINARY 'красный' 
+	   UNION 
+	   		SELECT '2' AS `vis`,
+	 		  		`artid` 
+	 		FROM `arts_59f82d82089a4` 
+	 		WHERE `art` LIKE BINARY 'красный%' AND  `art` NOT LIKE BINARY 'красный' 
+	 		UNION 
+	 			  SELECT '3' AS `vis`,
+	 			  		`artid` FROM `arts_59f82d82089a4` 
+	 			  WHERE `art` LIKE BINARY '%красный%' AND  `art` NOT LIKE BINARY 'красный%' 
+	 			  UNION 
+	 			  		SELECT '4' AS `vis`,
+	 			  			   `items_59f82d82089a4`.`id` AS `artid` 
+	 			  	    FROM `items_59f82d82089a4` WHERE  MATCH (`items_59f82d82089a4`.`descr`) AGAINST(' +красн*' IN BOOLEAN MODE) 
+	 ) as `A` 
+ WHERE  `items_59f82d82089a4`.`id`=`A`.`artid` AND (`items_59f82d82089a4`.`amount` <> 0 OR `vis`<3) 
+ ORDER BY `vis`,`items_59f82d82089a4`.`price`>0 DESC, `items_59f82d82089a4`.`price` 
+
+ SELECT '1' AS `vis`,`artid` FROM `arts_59f82d82089a4` WHERE `art` LIKE BINARY 'красный' UNION SELECT '2' AS `vis`,`artid` FROM `arts_59f82d82089a4` WHERE `art` LIKE BINARY 'красный%' AND  `art` NOT LIKE BINARY 'красный' UNION SELECT '3' AS `vis`,`artid` FROM `arts_59f82d82089a4` WHERE `art` LIKE BINARY '%красный%' AND  `art` NOT LIKE BINARY 'красный%' UNION SELECT '4' AS `vis`,`items_59f82d82089a4`.`id` AS `artid` FROM `items_59f82d82089a4` WHERE  MATCH (`items_59f82d82089a4`.`descr`) AGAINST(' +красн*' IN BOOLEAN MODE);

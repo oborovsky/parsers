@@ -1,0 +1,88 @@
+схема:
+1) загружаем xml поставщиков ( в 00:00 downloads.sh)
+
+2) предварительный разбор в таблицу tmp_goods ( в 01:00 loadouts_std.sh)
+
+3) потом запускается runparser.sh ->  process_params.php,
+который разбирает tmp_goods на goods_prices, img_urls, images, goods_props, hashes, goods_props_current
+по кусочкам.
+	3.1) если в таблице goods_prices записи с таким артиклем нет, то добавляем её,
+			иниче обновляем её.
+	3.2) в таблицу img_urls добавляем запись с (url="url картинки", hash="") и возвращаем (art_id,url_id),
+			где art_id - id записи товара в таблице  goods_prices, url_id - id записи картинки к товару в img_urls,
+			их вставляем в таблицу images
+	3.3) далее шифруем с помощью md5 $art_id.d.$info['desc'], $art_id.p.$info['params'], $art_id.c.$t[4](cat в таблице tmp_goods),
+			разбиваем код каждого на две части по 16 бит ,переводим в строку и делаем выборку со сравнением из таблицы hashes,
+			если в таблице хашей нет хоть одного полученного кода, то
+			вставляем коды в hashes, а (art_id, mfg, descr, images, params, cats) в таблицы goods_props, goods_props_current.
+
+
+4) запускаестся скрипт subscribeupd_new.sh, который загружаетс обновления в базу gs3_blank:
+	gs3.goods_prices -> gs3_blank.goods_pricis_tmp -> gs3_blank.goods_prices_0;
+
+добавляте строки в goods_bindings_0, items_0 - если нужно;
+
+sql="SELECT P.id, REPLACE(P.art,' ','_') , P.mfg, B.art_id as ss FROM \`gs3\`.\`goods_prices\` as P LEFT JOIN \`gs3_blank\`.\`goods_bindings_0\` as B ON P.\`id\`=B.art_id HAVING ss is NULL;"
+
+gs3.goods_props_current -> items_0, gs3_blank.goods_prices_0 -> items_0
+
+5) затем, сливаем таблицы в csv файлы bitmasks_0 -> bitmasks_0.csv,
+	items_0 -> items_0.csv (новые и с истекшим периодом) , bits_0 -> bits_0.csv ;
+	и в vars_0.csv записываем количество записей в получившихся файлах;
+	и по ftp передаем их на сервер в cat_new/in (скрипт transfer.sh )
+
+	mysql $dbargs $dbuser --execute="SELECT id,arts,mfgs,cats,descr,params,images,price,overprice,prices,amount,overamount,amounts,price_view,ok,uid,upd,CAST(isnew AS UNSIGNED) as intgr INTO OUTFILE '/var/www/${uid}/items_0.csv' CHARACTER SET utf8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' ESCAPED BY '\\\\' LINES TERMINATED BY '\\n' FROM \`items_0\` WHERE \`upd\` > (NOW() - INTERVAL ${timelimit} DAY) OR \`ok\`=1;"
+	
+5.1) файл test.php в cat_new загружает эти csv в базу на сервер
+--------------------------
+параллельно работа с картинками
+6) images_download.sh берёт адрес из img_urls, если для этой записи hash='' & state=0
+ и скачивает картинку в папку /var/www/images/ , если скачивается - иначе обновляет state=1,
+ и добавляет в таблицу imagefiles запись, связывающую hash и filename  в папке /var/www/images
+
+7) images_cure.sh пытается скачать картинки точно так же, как и images_download.sh, в случае неудачи
+увеличивая поле state на +1
+
+8) таблица images связывает картинки с товаром : art_id - > goods_prices, url_id -> img_urls;
+при state > 0 - картинка ещё не связана с товаром, тогда проверяет :скачена ли картинка, если да, то goods_prices.images +=img_urls.hash, state = 0;
+иначе state++
+(скрипт updateimages.sh)
+9) скрипт imagefiles.sh выгружает таблицу в файл imagefiles.sql и по ftp передаёт его на сервер
+в папку cat_new/in
+
+при добавлении каталога я правил таблицы в базах:
+gs3
+-----------------
+system_config - добавил записи var_KEY_RAINBOW=W, arr_PRICES_W=a:1:{s:13:"price_rainbow";s:22:"розничная цена rainbow";},
+				arr_STOCKS_W=a:1:{s:13:"stock_rainbow";s:31:"Радуга (на складе)";} 
+				и в запись arr_MANUFACTURERS добавил s:1:"W";s:7:"Rainbow" получилось:
+				a:13:{s:1:"E";s:7:"Ebazaar";s:1:"O";s:5:"OASIS";s:1:"C";s:5:"OCEAN";s:1:"H";s:11:"HAPPY gifts";s:1:"P";s:11:"Project 111";s:1:"M";s:16:"Mid Ocean Brands";s:1:"Q";s:29:"Локальный склад";s:1:"J";s:6:"ЕЖЕ";s:1:"X";s:6:"XINDAO";s:1:"R";s:14:"РосТайм";s:1:"K";s:18:"Эклектика";s:1:"S";s:4:"STAN";s:1:"W";s:7:"Rainbow";}
+goods_prices - добавил поля price_rainbow, price_rainbow_, stock_rainbow, stock_rainbow_
+
+gs3_blank
+-----------------
+system_config - добавил записи var_PRICEMULT_W=price_rainbow:1.00, var_AMOUNTSUM_W=`stock_rainbow`, 
+				var_PRICEVIEW_W=CONCAT(CAST(TRUNCATE(`price_rainbow`/100,2) AS CHAR),' р.')
+				и в запись var_SUBSCRIBES добавил W получилось:
+				E,O,C,H,P,M,Q,J,X,R,K,S,W
+bitmasks_0   -  добивил запись INSERT INTO `bitmasks_0` (`id`, `parent`, `value`, `order`, `hvost`, `settings`, `uid`, `upd`) VALUES
+				(272, 21, 'Rainbow', 256, '263,265,264,121', 72625749491713, 2, NULL);
+
+при разборе нового товара, на него заводится карточка, и id товара заносится в таблицу gs3_blank.bits_0
+
+при обращеннии к catalogue.php получен ответ , для выборки Текстиля
+
+"SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' AND `cats` LIKE '%Текстиль%' AND `amount`>0  LIMIT 300,50"
+
+"SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) LIMIT 0,50"
+
+без карточки :
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' LIMIT 0,50
+
+в наличии :
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' AND `amount`>0  LIMIT 0,50
+
+без карточки :
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) LIMIT 0,50
+
+SELECT `id`,`arts`,`mfgs`,`cats`,`descr`,`params`,`images`,`upd`,`price`,`overprice`,`amount`,`overamount`,`price_view` FROM `items_0`  WHERE ( (`upd` > (NOW() - INTERVAL 14 DAY) && `ok`=0) || `ok`>0) AND `id` NOT IN (SELECT `id` FROM `bits_0`) AND `mfgs` LIKE'%W%' AND `amount`>0  LIMIT 0,50

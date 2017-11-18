@@ -1,7 +1,7 @@
 <?php
 // $MASTER_DB=1;
 // $t0="common.php"; while(!defined("ROOT")) {include($t0); $t0="..".DIRECTORY_SEPARATOR.$t0;}; unset($t0);//$DEBUG=100;
-$time=$_SERVER['REQUEST_TIME']+15;
+$time=$_SERVER['REQUEST_TIME']+45;
 $comma_a=array(","," "); $comma_b=array(".","");
 define("COINS",100);
 define("GRAMS",1000);
@@ -22,8 +22,8 @@ mysql_query("SET NAMES utf8",$out_connect);
  ================================================================*/
 $LOCAL_SERVER="localhost";
 $LOCAL_USER="root";
-$LOCAL_PASS="k0les0";
-// $LOCAL_PASS = "4995";
+// $LOCAL_PASS="k0les0";
+$LOCAL_PASS = "4995";
 $LOCAL_DB="test";
 
 $std_connect=mysql_connect($LOCAL_SERVER,$LOCAL_USER,$LOCAL_PASS) or die("error on connect to base".mysql_error());
@@ -56,6 +56,8 @@ function apply_rules($data,$rules) {
     foreach($rules as $v)
         if(strpos($data,$v[2])!==FALSE) //В данных есть информация, к которой применимо правило
             if(preg_match_all("/".$v[3]."/sm",$data,$result,PREG_SET_ORDER)) { //применяем правило (вытаскиваем массив нужных данных)
+                // echo "parsing \n";
+                // print_r($result);
                 $tt=array();
                 $len=count($result);
                 if($len==1) {
@@ -80,11 +82,14 @@ function apply_rules($data,$rules) {
 $parsers=array(); $cats=array();
 if(($handle=fopen("configure.rgx","r"))!==FALSE) {
     while($data=fgetcsv($handle,1000,","))
-    if(count($data)===6) {
+    if(count($data)===6) 
+    {
         $parsers[$data[0]][]=array($data[1],$data[2],$data[3],$data[4],$data[5]);
         $cats[]=$data[0];
     };
     fclose($handle); 
+
+    // print_r($parsers);
 
     echo "read done from cofigure.rgx\n";
 
@@ -98,12 +103,12 @@ if(($handle=fopen("configure.rgx","r"))!==FALSE) {
         while(($t=mysql_fetch_row($q))&&(time()<$time)) {
             $t[2]=mysql_real_escape_string($t[2],$std_connect); $t[3]=mysql_real_escape_string($t[3],$std_connect);
 
-            // print_r($t);
+             // print_r($t);
             // print_r($parsers[$t[1]]);
 
             $info=apply_rules($t[4],$parsers[$t[1]]);
 
-            // print_r($info);
+             // print_r($info);
             //echo "<pre>".COINS."<br>";
             //print_r($info);
             

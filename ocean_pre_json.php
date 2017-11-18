@@ -1,7 +1,44 @@
-<? $MASTER_DB=1;
+<?php
+ // $MASTER_DB=1;
 //$t0="common.php"; while(!defined("ROOT")) {include($t0); $t0="..".DIRECTORY_SEPARATOR.$t0;}; unset($t0); //$DEBUG=1;
-function mysql_($in) {echo $in;}
+
+// ini_set('display_errors', true);
+// error_reporting(E_ALL);
+
+header("Content-Type: text/plain; charset=utf-8");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0",false);
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");  
+header("Last-Modified: ".gmdate("D, d M Y H:i:s")." GMT");  
+header("Pragma: no-cache");
+
+$start = microtime(true);
+$host = "localhost";
+$user = "root";
+$password = "4995";
+$db = "test";
+$table = "tmp_goods";
+
+$lnk = mysql_connect($host, $user, $password) or die("error in connect: ".mysql_error());
+mysql_select_db($db,$lnk) or die("error in select db: ".mysql_error());
+mysql_query("set names utf8");
+
+echo " start\n";
+
+function mysql_q($in) 
+{
+    $result = mysql_query($in) or die("error in query: ".mysql_error());
+    return $result;
+}
+function s($in)
+{
+    return mysql_real_escape_string($in);
+}
+define("ROOT","./");
 $KEY_OCEAN = "C";
+
+function mysql_($in) {echo $in;}
+
 $json_string = file_get_contents("in/catalog.json");
 if ( $json_string === false) 
 {
@@ -38,48 +75,70 @@ $items = $catalog->products;
 $out_array = array();
 
 foreach ($items as $item) 
-{
-    $xml = "";
-    $xml = $xml."<name>".$item->name."</name>";
-    $catsId = $item->categories[0];
-    if ( $item->brand != null ) $xml = $xml."<brand>".$item->brand."</brand>";
-    if ( $item->material != null ) $xml = $xml."<material>".$item->material."</material>";
-    if ( $item->weight != null ) $xml = $xml."<weight>".$item->weight."</weight>";
-    $xml = $xml."<descr>".$item->info."</descr>";
+{   
+    // if( $item->main_id == 34084)
+    // {
+        $xml = "<item>\n";
+        $xml = $xml."<name>".$item->name."</name>\n";
+        $catsId = $item->categories[0];
+        if ( $item->brand != null ) $xml = $xml."<brand>".$item->brand."</brand>\n";
+        if ( $item->material != null ) $xml = $xml."<material>".$item->material."</material>\n";
+        if ( $item->weight != null ) $xml = $xml."<weight>".$item->weight."</weight>\n";
+        $xml = $xml."<descr>".$item->info."</descr>\n";
 
 
-    foreach ($item->colors as $color)
-    {
-        $xml = $xml."<color>".$color->color->name."</color>";
-        $images = "";
-        foreach ($color->photos as $photo)
+        foreach ($item->colors as $color)
         {
-            $images = $images."<image>http://www.oceangifts.ru".$photo."</image>";
-        }
-
-        foreach ($color->sizes as $size)
-        {
-            $art  = $size->article;
-            if( $art == "2025DKR.18")
+            $xml_1 = $xml;
+            $xml_1 = $xml_1."<color>".$color->color->name."</color>\n";
+            $images = "";
+            foreach ($color->photos as $photo)
             {
-                if( $size->size != null ) $xml = $xml."<size>".$size->size."</size>";
-                $xml = $xml."<price>".$size->price."</price><images>".$images."</images>";
+                $images = $images."<image>http://www.oceangifts.ru".$photo."</image>\n";
+            }
 
-                $total_amount = 0;
-                foreach ($size->stores->remains as $store)
-                {
-                    $total_amount += $store->count;
-                }
-                $xml = $xml."<amount>".$total_amount."</amount>";
+            foreach ($color->sizes as $size)
+            {
+                $xml_2 = $xml_1;
+                $art  = $size->article;
+                 // if( $art == "41034-61")
+                 // {
+                    if( $size->size != null ) $xml_2 = $xml_2."<size>".$size->size."</size>\n";
+                    $xml_2 = $xml_2."<price>".$size->price."</price>\n<images>\n".$images."</images>\n";
 
-                $out_array[] = "('".$KEY_OCEAN."','".$art."','".$cats[$catsId]."','".$xml."')";
+                    $total_amount = 0;
+                    foreach ($size->stores->remains as $store)
+                    {
+                        $total_amount += $store->count;
+                    }
+                    $xml_2 = $xml_2."<amount>".$total_amount."</amount>\n</item>";
+
+                    $out_array[] = "('".$KEY_OCEAN."','".s($art)."','".$cats[$catsId]."','".s($xml_2)."')";
+                 // }
             }
         }
-    }
+    // }
 }
-
+ // print_r($out_array);
 $d=count($out_array);
-if($d) mysql_("INSERT INTO `tmp_goods`(`mfg`,`art`,`cat`,`xml`) VALUES ".implode(",",$out_array));
-echo "\n done:".$d;
+$e=0;
+$ii=array();
+echo " start inserting :\n ";
+foreach($out_array as $r) {
+    $e++;
+
+    if(($e%10)==0) {
+        $sql = "INSERT INTO `tmp_goods` (`mfg`,`art`,`cat`,`xml`) VALUES ".implode(",",$ii);
+        mysql_q($sql);
+        $ii=array($r);
+    }
+    else $ii[]=$r;
+}
+ mysql_q("INSERT INTO `tmp_goods`(`mfg`,`art`,`cat`,`xml`) VALUES ".implode(",",$ii));
+$time = microtime(true) - $start;
+echo "done:".$e."\n time:".$time."\n";
+
+// if($d) mysql_("INSERT INTO `tmp_goods`(`mfg`,`art`,`cat`,`xml`) VALUES ".implode(",",$out_array));
+echo "\n recods:".$d."\n";
 
 ?>

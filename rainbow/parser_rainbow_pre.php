@@ -74,13 +74,17 @@ function make_products($products)
     foreach($products->offer as $offer)
     {
         $art=(string)$offer->art;
-        $cat_id = (int)$offer->parent_id;
-        $category = get_cat($cat_id); 
-        if ( $category == "")
+        // echo $art, "\n";
+        if ( $art == "52070914.16")
         {
-            echo "для art:$art катероия пуста, cat_id=$cat_id \n";
+            $cat_id = (int)$offer->parent_id;
+            $category = get_cat($cat_id); 
+            if ( $category == "")
+            {
+                echo "для art:$art катероия пуста, cat_id=$cat_id \n";
+            }
+            $out_array[]="('".$KEY_RAINBOW."','".mysql_real_escape_string($art)."','".$category."','".mysql_real_escape_string($offer->asXML())."')";
         }
-        $out_array[]="('".$KEY_RAINBOW."','".mysql_real_escape_string($art)."','".$category."','".mysql_real_escape_string($offer->asXML())."')";
     }
 }
 //переделываем немного картинки, чтобы было как в XINDAO

@@ -181,3 +181,4 @@
 "C","params","weight","<weight","<weight.*?>(.+?)<\/weight.*?>","{1}"
 "C","params","color","<color","<color.*?>(.+?)<\/color.*?>","{1}"
 "C","images","img","<image","<image(?:\s.*?[^\/]?>|>)([^<]+?)<\/image.*?>","{1}"
+"C","params","print","<print","<print.*?>(.+?)<\/print.*?>","{1}"

@@ -15,7 +15,8 @@ header("Pragma: no-cache");
 $start = microtime(true);
 $host = "localhost";
 $user = "root";
-$password = "4995";
+// $password = "4995";
+$password = "k0les0";
 $db = "test";
 $table = "tmp_goods";
 
@@ -76,16 +77,34 @@ $out_array = array();
 
 foreach ($items as $item) 
 {   
-    // if( $item->main_id == 34084)
-    // {
+    if( $item->main_id == 34084)
+    {
         $xml = "<item>\n";
         $xml = $xml."<name>".$item->name."</name>\n";
+        $mainSize = $item->size;
         $catsId = $item->categories[0];
         if ( $item->brand != null ) $xml = $xml."<brand>".$item->brand."</brand>\n";
         if ( $item->material != null ) $xml = $xml."<material>".$item->material."</material>\n";
         if ( $item->weight != null ) $xml = $xml."<weight>".$item->weight."</weight>\n";
         $xml = $xml."<descr>".$item->info."</descr>\n";
 
+        $plottings = "";
+
+        foreach ($item->plottings as $plotting)
+        {
+            $printings = $printings.$plotting->place." - ";
+            foreach ($plotting->works as $work)
+            {
+                $printings = $printings.$work.",";
+            }  
+            $printings = rtrim($printings,",")."<br>";
+        }
+        $printings = rtrim($printings,">");
+        $printings = rtrim($printings,"r");
+        $printings = rtrim($printings,"b");
+        $printings = rtrim($printings,"<");
+
+        if ($printings != "") $xml = $xml."<print>".$printings."</print>";
 
         foreach ($item->colors as $color)
         {
@@ -103,7 +122,15 @@ foreach ($items as $item)
                 $art  = $size->article;
                  // if( $art == "41034-61")
                  // {
-                    if( $size->size != null ) $xml_2 = $xml_2."<size>".$size->size."</size>\n";
+                    if( $size->size != null ) 
+                    {
+                        $xml_2 = $xml_2."<size>".$size->size."</size>\n";
+                    }
+                    else 
+                    {
+                        if ($mainSize != null) $xml_2 = $xml_2."<size>".$mainSize."</size>\n";
+                    }
+
                     $xml_2 = $xml_2."<price>".$size->price."</price>\n<images>\n".$images."</images>\n";
 
                     $total_amount = 0;
@@ -117,7 +144,7 @@ foreach ($items as $item)
                  // }
             }
         }
-    // }
+    }
 }
  // print_r($out_array);
 $d=count($out_array);

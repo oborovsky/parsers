@@ -132,11 +132,16 @@ mysql $dbargs $dbroot --execute="SELECT \`userid\`,\`loaded\` FROM \`ftpuser\` W
                         #mysql $dbargs --database=$dbuser --execute="CREATE TEMPORARY TABLE IF NOT EXISTS temp_table ( INDEX(id) ) ENGINE=MEMORY AS (  SELECT items_0.id as id, ${val}*${col}, ${amounts} FROM goods_prices_0 INNER JOIN goods_bindings_0 ON goods_prices_0.id=goods_bindings_0.art_id INNER JOIN items_0 ON goods_bindings_0.int=items_0.id WHERE items_0.mfgs LIKE '%${i}%')"
                         #sql="UPDATE items_0 I1, (SELECT I.id as id, P.${col} as new_price FROM goods_prices_0 as P, goods_bindings_0 as B, items_0 as I WHERE I.id=B.int AND B.art_id=P.id AND I.mfgs LIKE '%${i}%') I2  SET I1.price=${val}*I2.new_price WHERE I1.id=I2.id AND I1.mfgs LIKE '%${i}%'"
                         sql="UPDATE items_0 I1, (SELECT I.id as id, ${pricesv} as new_price_view, ${amounts} as new_amount, P.${col} as new_price, P.upd as new_upd, P.images as new_images, P.isnew as isnew FROM goods_prices_0 as P, goods_bindings_0 as B, items_0 as I WHERE I.id=B.int AND B.art_id=P.id AND I.mfgs LIKE '%${i}%') I2  SET I1.price=${val}*I2.new_price, I1.amount=I2.new_amount, I1.price_view=I2.new_price_view, I1.upd=I2.new_upd, I1.images_new=I2.new_images, I1.isnew=I2.isnew WHERE I1.id=I2.id AND I1.mfgs LIKE '%${i}%'"
+                        
+                        # вариант, сохраняющий порядок картинок, выставленный в карточки товара 21.11.17
+                        #sql="UPDATE items_0 I1, (SELECT I.id as id, ${pricesv} as new_price_view, ${amounts} as new_amount, P.${col} as new_price, P.upd as new_upd, P.images as new_images, P.isnew as isnew FROM goods_prices_0 as P, goods_bindings_0 as B, items_0 as I WHERE I.id=B.int AND B.art_id=P.id AND I.mfgs LIKE '%${i}%') I2  SET I1.price=${val}*I2.new_price, I1.amount=I2.new_amount, I1.price_view=I2.new_price_view, I1.upd=I2.new_upd, I1.isnew=I2.isnew WHERE I1.id=I2.id AND I1.mfgs LIKE '%${i}%'"
                         echo $sql
                         mysql $dbargs --database=$dbuser --execute="${sql}"
                         
                         #UPDATE
                         sql="UPDATE \`items_0\` SET \`images\`=\`images_new\` WHERE \`images_new\` IS NOT NULL AND \`ok\`=0;"
+                        # вариант, сохраняющий порядок картинок, выставленный в карточки товара 21.11.17
+                        # sql = "UPDATE items_0 I, goods_bindings_0 B, goods_prices P SET I.images = P.images, I.images_new = P.images WHERE I.id = B.int AND B.art_id = P.id AND I.images_new <> P.images AND I.mfgs LIKE '%${i}%'"
                         mysql $dbargs --database=$dbuser --execute="${sql}"
                         
                         #TEMOIRARY UNUSED. IMPROVED JUST ABOVE

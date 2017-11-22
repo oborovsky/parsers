@@ -15,8 +15,8 @@ header("Pragma: no-cache");
 $start = microtime(true);
 $host = "localhost";
 $user = "root";
-// $password = "4995";
-$password = "k0les0";
+$password = "4995";
+// $password = "k0les0";
 $db = "test";
 $table = "tmp_goods";
 
@@ -74,10 +74,11 @@ make_cats($catalog->categories, "");
 $items = $catalog->products;
 // var_dump($items[0]);
 $out_array = array();
-
+$arh_photo = array();
+$i = 0;
 foreach ($items as $item) 
 {   
-    if( $item->main_id == 34084)
+    if( $item->main_id == 33833)
     {
         $xml = "<item>\n";
         $xml = $xml."<name>".$item->name."</name>\n";
@@ -88,7 +89,7 @@ foreach ($items as $item)
         if ( $item->weight != null ) $xml = $xml."<weight>".$item->weight."</weight>\n";
         $xml = $xml."<descr>".$item->info."</descr>\n";
 
-        $plottings = "";
+        $printings = "";
 
         foreach ($item->plottings as $plotting)
         {
@@ -113,9 +114,19 @@ foreach ($items as $item)
             $images = "";
             foreach ($color->photos as $photo)
             {
+                if ( isset($arh_photo[$photo]) )
+                {
+                    $photo = $photo."?i=$i";
+                    $i++;
+                } 
+                else 
+                {
+                    $arh_photo[$photo] = true;
+                }
                 $images = $images."<image>http://www.oceangifts.ru".$photo."</image>\n";
+                echo $photo,"\n";
             }
-
+           
             foreach ($color->sizes as $size)
             {
                 $xml_2 = $xml_1;

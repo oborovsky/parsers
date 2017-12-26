@@ -30,8 +30,6 @@
 10,30,50 */1 * * * bash /var/www/rc/transfer.sh >> /var/log/d3c_transfer.log
 */1 * * * * bash /var/www/rc/updateimages.sh >> /var/log/d3c_updimages.log
 */10 * * * * bash /var/www/rc/imagefiles.sh >> /var/log/d3c_imagefiles.log
-###*/1 * * * * bash /var/www/rc/images_get.sh > /var/log/d3c_image_backup
-#*/1 * * * * bash /var/www/rc/accept_updates.sh blank >> /var/log/d3c_accept_updates.log
-###*/1 * * * * curl http://max.cuty.ru/system/test.php >> /var/log/1rebuild_binds.log
+
 
 

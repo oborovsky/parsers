@@ -23,15 +23,8 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
-###*/1 * * * * /home/qti/rc/download.sh > /dev/null 2>&1; sleep 10; /home/qti/rc/download.sh > /dev/null 2>&1
-###>> /home/qti/log/d3c_images.log
-###*/3 * * * * /home/qti/rc/cure.sh > /dev/null 2>&1
-###>> /home/qti/log/d3c_cure_images.log
 3,13,23,33,43,53 * * * * bash /home/qti/rc/imagefiles.sh > /var/log/d3c_imagefiles.log 2>&1
-###/dev/null 2>&1
 */20 * * * * cd /home/qtw/www/cat_new; php /home/qtw/www/cat_new/test.php >> /home/qtw/log/siteupdate.log
 30 */12 * * * cd /home/qtw/www/cat_new; php list_generator.php
 30 * * * * wget -s http://www.cuty.ru/sitemap_generator.php > /dev/null 2>&1
-#0 23 * * * /bin/bash /home/qti/rc/clearlogs.sh
-###15 10,12,15,17 * * 4 /bin/bash /home/www/reminder.sh
-###0 */3 * * * bash /home/www/reminder_SH.sh > /dev/null 2>&1
+

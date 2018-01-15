@@ -1,3 +1,4 @@
+1)
 про сувениры, нанес. логотипа, наше производсто : /applications/souvenirs/souvenirs.php->/includes/content.inc->/applications/souvenirs/includes/body.inc
 	про сувениры : тело в /applications/souvenirs/includes/content_.inc
 	 нанес . логотипа : списки и тело статьи выводится /applications/souvenirs/includes/content_engrave.inc
@@ -17,3 +18,6 @@
 		ajax отсылаются скрипту на сервере /ajaxpost.php;
 		если ответ ок, очищаются поля, иначе подсвечиваем поля красным сигнализируя о 			ошибке.Потом сообщения пересылаются на почту.
 
+2) 
+меню на главной странице.
+/menu_struct.inc обрабатывается файлом /menu.php

@@ -1,0 +1,19 @@
+про сувениры, нанес. логотипа, наше производсто : /applications/souvenirs/souvenirs.php->/includes/content.inc->/applications/souvenirs/includes/body.inc
+	про сувениры : тело в /applications/souvenirs/includes/content_.inc
+	 нанес . логотипа : списки и тело статьи выводится /applications/souvenirs/includes/content_engrave.inc
+	наше производство : список в /applications/souvenirs/includes/content_manufact.inc 
+							а тело статьи в /applications/souvenirs/includes/body.inc
+статьи о сувенирах: интро в /applications/souvenirs/includes/body.inc 
+						а список и тело статьи в /applications/souvenirs/includes/content_clause.inc
+каталоги и бренды: интро в  /applications/souvenirs/includes/body.inc  	
+						список в /applications/souvenirs/includes/output_catalogs.inc
+						тело статьи в /applications/souvenirs/includes/content_catalogs.inc
+							сертификаты в /includes/gallery.inc
+
+каталог : управление левым меню навигации в /cat_new/cat_view.php
+портфолио : список в  /include/cubik.inc
+				тело в /applications/souvenirs/includes/output_simplest.inc
+написать : форма отсылка сообщения обрабатывается javascript'ом (файл /js/jform.js) и данные по 
+		ajax отсылаются скрипту на сервере /ajaxpost.php;
+		если ответ ок, очищаются поля, иначе подсвечиваем поля красным сигнализируя о 			ошибке.Потом сообщения пересылаются на почту.
+
